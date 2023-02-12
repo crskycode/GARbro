@@ -503,7 +503,6 @@ namespace GARbro {
 		
 		static void Usage() {
 			Console.WriteLine(string.Format("GARbro - Game Resource browser, version {0}\n2014-2020 by mørkt, published under a MIT license", Assembly.GetAssembly(typeof(FormatCatalog)).GetName().Version));
-			Console.WriteLine("2023 - Console version built by. Dreamsavior");
 			Console.WriteLine("-----------------------------------------------------------------------------\n");
 			Console.WriteLine(string.Format("Usage: {0} <command> [<switches>...] <archive_name>", Process.GetCurrentProcess().ProcessName));
 			Console.WriteLine("\nCommands:");
