@@ -44,6 +44,7 @@ namespace GameRes.Formats.Circus
         public override string         Tag { get { return "CRXD"; } }
         public override string Description { get { return "Circus differential image format"; } }
         public override uint     Signature { get { return 0x44585243; } } // 'CRXD'
+        public override bool CanWrite { get { return false; } }
 
         public CrxdFormat ()
         {
