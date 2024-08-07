@@ -200,5 +200,8 @@
     <Setting Name="AFAEncodingCP" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">932</Value>
     </Setting>
+    <Setting Name="DXAPassword" Type="System.String" Scope="User">
+      <Value Profile="(Default)">DXARC</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
