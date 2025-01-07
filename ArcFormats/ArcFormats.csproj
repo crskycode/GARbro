@@ -131,7 +131,9 @@
     <Compile Include="Artemis\ImageNekoPNG.cs" />
     <Compile Include="CsWare\AudioWAV.cs" />
     <Compile Include="CsWare\ImageGDT.cs" />
+    <Compile Include="DigitalWorks\ArcPACsingle.cs" />
     <Compile Include="DigitalWorks\ArcPACPS2.cs" />
+    <Compile Include="DigitalWorks\ImageTM2arc.cs" />
     <Compile Include="DxLib\HuffmanDecoder.cs" />
     <Compile Include="DxLib\WidgetDXA.xaml.cs">
       <DependentUpon>WidgetDXA.xaml</DependentUpon>
