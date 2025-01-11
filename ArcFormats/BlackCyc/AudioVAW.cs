@@ -67,7 +67,15 @@ namespace GameRes.Formats.BlackCyc
             else if (2 == header.PackType)
             {
                 format = OggAudio.Instance;
-                offset = 0x6C;
+                file.Seek(0x6C, SeekOrigin.Begin);
+                if (0x4F == file.ReadByte())
+                {
+                    offset = 0x6C;
+                }
+                else
+                {
+                    offset = 0x6E;
+                }
             }
             else if (6 == header.PackType && Binary.AsciiEqual (header.Bytes, 0x10, "OGG "))
             {
