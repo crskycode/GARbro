@@ -213,14 +213,18 @@ namespace GameRes
             int src = 0;
             var color_map = new Color[colors];
             Func<int, Color> get_color;
-            if (PaletteFormat.Bgr == format || PaletteFormat.BgrX == format)
+            if (PaletteFormat.Bgr == format)
                 get_color = x => Color.FromRgb (palette_data[x+2], palette_data[x+1], palette_data[x]);
+            else if (PaletteFormat.BgrX == format)
+                get_color = x => Color.FromArgb(palette_data[x+3] >= byte.MaxValue / 2 ? byte.MaxValue : (byte)(palette_data[x+3] << 1), palette_data[x+2], palette_data[x+1], palette_data[x]);
             else if (PaletteFormat.BgrA == format)
                 get_color = x => Color.FromArgb (palette_data[x+3], palette_data[x+2], palette_data[x+1], palette_data[x]);
             else if (PaletteFormat.RgbA == format)
                 get_color = x => Color.FromArgb (palette_data[x+3], palette_data[x], palette_data[x+1], palette_data[x+2]);
+            else if (PaletteFormat.RgbX == format)
+                get_color = x => Color.FromArgb (palette_data[x+3] >= byte.MaxValue / 2 ? byte.MaxValue : (byte)(palette_data[x+3] << 1), palette_data[x], palette_data[x+1], palette_data[x+2]);
             else
-                get_color = x => Color.FromRgb (palette_data[x],   palette_data[x+1], palette_data[x+2]);
+                get_color = x => Color.FromRgb (palette_data[x], palette_data[x+1], palette_data[x+2]);
 
             for (int i = 0; i < colors; ++i)
             {
