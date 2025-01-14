@@ -36,6 +36,7 @@ namespace GameRes.Formats.DigitalWorks
         public int  PaletteSize;
         public int  HeaderSize;
         public int  Colors;
+        public bool X_A = false;
     }
 
     [Export(typeof(ImageFormat))]
@@ -69,6 +70,7 @@ namespace GameRes.Formats.DigitalWorks
                 PaletteSize = header.ToInt32 (0x14),
                 HeaderSize = header.ToUInt16 (0x1C),
                 Colors  = header.ToUInt16 (0x1E),
+                X_A = header.ToUInt16(0x30) == 0, // not so sure, there will be omissions
             };
         }
 
@@ -113,9 +115,9 @@ namespace GameRes.Formats.DigitalWorks
             int image_size = (int)m_info.Width * (int)m_info.Height * pixel_size;
             var output = m_input.ReadBytes (image_size);
             if (pixel_size <= 8 && m_info.Colors > 0)
-                Palette = ReadPalette (m_info.Colors);
+                Palette = ReadPalette (m_info.Colors, m_info.X_A);
 
-            if (pixel_size >= 3)
+            if (pixel_size == 3 || pixel_size == 4 && !m_info.X_A)
             {
                 for (int i = 0; i < image_size; i += pixel_size)
                 {
@@ -124,12 +126,25 @@ namespace GameRes.Formats.DigitalWorks
                     output[i+2] = r;
                 }
             }
+            if (pixel_size == 4 && m_info.X_A)
+            {
+                for (int i = 0; i < image_size; i += 4)
+                {
+                    byte r = output[i];
+                    output[i] = output[i + 2];
+                    output[i + 2] = r;
+                    if (output[i + 3] >= byte.MaxValue / 2)
+                        output[i + 3] = byte.MaxValue;
+                    else
+                        output[i + 3] = (byte)(output[i + 3] << 1);
+                }
+            }
             return output;
         }
 
-        BitmapPalette ReadPalette (int color_num)
+        BitmapPalette ReadPalette (int color_num, bool X_A = false)
         {
-            var source = ImageFormat.ReadColorMap (m_input.AsStream, color_num, PaletteFormat.RgbA);
+            var source = ImageFormat.ReadColorMap (m_input.AsStream, color_num, X_A ? PaletteFormat.RgbX : PaletteFormat.RgbA);
             var color_map = new Color[color_num];
 
             int parts = color_num / 32;
