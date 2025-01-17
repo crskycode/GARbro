@@ -18,12 +18,11 @@ namespace SchemeTool
                 GameRes.FormatCatalog.Instance.DeserializeScheme(stream);
             }
 
-            GameRes.Formats.KiriKiri.Xp3Opener format = GameRes.FormatCatalog.Instance.ArcFormats
-                .FirstOrDefault(a => a is GameRes.Formats.KiriKiri.Xp3Opener) as GameRes.Formats.KiriKiri.Xp3Opener;
+            GameRes.Formats.FamilyAdvSystem.CsafOpener format = GameRes.FormatCatalog.Instance.ArcFormats.FirstOrDefault(a => a is GameRes.Formats.FamilyAdvSystem.CsafOpener) as GameRes.Formats.FamilyAdvSystem.CsafOpener;
 
             if (format != null)
             {
-                GameRes.Formats.KiriKiri.Xp3Scheme scheme = format.Scheme as GameRes.Formats.KiriKiri.Xp3Scheme;
+                GameRes.Formats.FamilyAdvSystem.FamilyAdvScheme schmem = format.Scheme as GameRes.Formats.FamilyAdvSystem.FamilyAdvScheme;
 
                 // Add scheme information here
 
@@ -42,11 +41,11 @@ namespace SchemeTool
                     ControlBlock = cb2.ToArray()
                 };
                 GameRes.Formats.KiriKiri.ICrypt crypt = new GameRes.Formats.KiriKiri.CxEncryption(cs);
-#else
+
                 GameRes.Formats.KiriKiri.ICrypt crypt = new GameRes.Formats.KiriKiri.XorCrypt(0x00);
 #endif
 
-                scheme.KnownSchemes.Add("game title", crypt);
+                schmem.KnownKeys.Add("nanairo","招子");   
             }
 
             var gameMap = typeof(GameRes.FormatCatalog).GetField("m_game_map", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
@@ -55,7 +54,7 @@ namespace SchemeTool
             if (gameMap != null)
             {
                 // Add file name here
-                gameMap.Add("game.exe", "game title");
+                gameMap.Add("nanairo.exe", "nanairo");
             }
 
             // Save database
