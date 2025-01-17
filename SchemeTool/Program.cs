@@ -45,7 +45,7 @@ namespace SchemeTool
                 GameRes.Formats.KiriKiri.ICrypt crypt = new GameRes.Formats.KiriKiri.XorCrypt(0x00);
 #endif
 
-                schmem.KnownKeys.Add("nanairo","招子");   
+                schmem.KnownKeys.Add("Nanairo * Clip ~Saigo no Stage~", "招子");   
             }
 
             var gameMap = typeof(GameRes.FormatCatalog).GetField("m_game_map", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
@@ -54,7 +54,7 @@ namespace SchemeTool
             if (gameMap != null)
             {
                 // Add file name here
-                gameMap.Add("nanairo.exe", "nanairo");
+                gameMap.Add("nanairo.exe", "Nanairo * Clip ~Saigo no Stage~");
             }
 
             // Save database
