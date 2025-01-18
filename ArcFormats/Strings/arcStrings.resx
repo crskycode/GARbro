@@ -401,4 +401,8 @@ Choose encryption scheme or enter a passphrase.</value>
   <data name="ODNAudioSampleRate" xml:space="preserve">
     <value>Default audio sampling rate</value>
   </data>
+  <data name="Tim2AlphaFormat" xml:space="preserve">
+    <value>Choose Tim2 image alpha format.
+It can't be read correctly from the file.</value>
+  </data>
 </root>

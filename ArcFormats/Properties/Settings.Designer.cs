@@ -837,5 +837,17 @@ namespace GameRes.Formats.Properties {
                 this["NexasEncodingCP"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("RGBA")]
+        public string TIM2AlphaFormat {
+            get {
+                return ((string)(this["TIM2AlphaFormat"]));
+            }
+            set {
+                this["TIM2AlphaFormat"] = value;
+            }
+        }
     }
 }

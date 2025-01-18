@@ -23,6 +23,7 @@
 // IN THE SOFTWARE.
 //
 
+using GameRes.Formats.Strings;
 using System;
 using System.ComponentModel.Composition;
 using System.IO;
@@ -36,7 +37,7 @@ namespace GameRes.Formats.DigitalWorks
         public int  PaletteSize;
         public int  HeaderSize;
         public int  Colors;
-        public bool X_A = false;
+        public byte X_A;
     }
 
     [Export(typeof(ImageFormat))]
@@ -49,7 +50,15 @@ namespace GameRes.Formats.DigitalWorks
         public Tim2Format ()
         {
             Extensions = new string[] { "tm2", "ext" };
+            Settings = new[] { AlphaFormat };
         }
+
+        FixedSetSetting AlphaFormat = new FixedSetSetting(Properties.Settings.Default)
+        {
+            Name = "TIM2AlphaFormat",
+            Text = arcStrings.Tim2AlphaFormat,
+            ValuesSet = new[] { "No Alpha", "RGBX", "RGBA" },
+        };
 
         public override ImageMetaData ReadMetaData (IBinaryStream file)
         {
@@ -63,6 +72,14 @@ namespace GameRes.Formats.DigitalWorks
             case 5: bpp = 8; break;
             default: return null;
             }
+            byte alpha;
+            switch (AlphaFormat.Get<String>())
+            {
+                case "No Alpha": alpha = 0; break;
+                case "RGBX": alpha = 7; break;
+                case "RGBA":
+                default: alpha = 8; break;
+            }
             return new Tim2MetaData {
                 Width  = header.ToUInt16 (0x24),
                 Height = header.ToUInt16 (0x26),
@@ -70,7 +87,7 @@ namespace GameRes.Formats.DigitalWorks
                 PaletteSize = header.ToInt32 (0x14),
                 HeaderSize = header.ToUInt16 (0x1C),
                 Colors  = header.ToUInt16 (0x1E),
-                X_A = header.ToUInt16(0x30) == 0, // not so sure, there will be omissions
+                X_A = alpha, //header.ToUInt16(0x30) == 0?// not so sure, there will be omissions
             };
         }
 
@@ -117,7 +134,7 @@ namespace GameRes.Formats.DigitalWorks
             if (pixel_size <= 8 && m_info.Colors > 0)
                 Palette = ReadPalette (m_info.Colors, m_info.X_A);
 
-            if (pixel_size == 3 || pixel_size == 4 && !m_info.X_A)
+            if (pixel_size == 3 || pixel_size == 4 && m_info.X_A == 8)
             {
                 for (int i = 0; i < image_size; i += pixel_size)
                 {
@@ -126,7 +143,7 @@ namespace GameRes.Formats.DigitalWorks
                     output[i+2] = r;
                 }
             }
-            if (pixel_size == 4 && m_info.X_A)
+            if (pixel_size == 4 && m_info.X_A == 7)
             {
                 for (int i = 0; i < image_size; i += 4)
                 {
@@ -139,12 +156,23 @@ namespace GameRes.Formats.DigitalWorks
                         output[i + 3] = (byte)(output[i + 3] << 1);
                 }
             }
+            if (pixel_size == 4 && m_info.X_A == 0)
+            {
+                for (int i = 0; i < image_size; i += 4)
+                {
+                    byte r = output[i];
+                    output[i] = output[i + 2];
+                    output[i + 2] = r;
+                    output[i + 3] = byte.MaxValue;
+                }
+            }
             return output;
         }
 
-        BitmapPalette ReadPalette (int color_num, bool X_A = false)
+        BitmapPalette ReadPalette (int color_num, byte X_A = 8)
         {
-            var source = ImageFormat.ReadColorMap (m_input.AsStream, color_num, X_A ? PaletteFormat.RgbX : PaletteFormat.RgbA);
+            var source = ImageFormat.ReadColorMap (m_input.AsStream,
+                color_num, X_A == 7 ? PaletteFormat.RgbX : X_A == 0 ? PaletteFormat.RgbX_Disposed : PaletteFormat.RgbA);
             var color_map = new Color[color_num];
 
             int parts = color_num / 32;

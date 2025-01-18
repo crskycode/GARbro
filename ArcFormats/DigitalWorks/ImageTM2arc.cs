@@ -15,7 +15,9 @@ namespace GameRes.Formats.DigitalWorks
         public TM2ArkFormat()
         {
             Extensions = new string[] { "tm2" };
+            Settings = null;
         }
+
         public override ImageMetaData ReadMetaData(IBinaryStream stream)
         {
             stream.Position = 9;

@@ -501,4 +501,8 @@ Choose encryption scheme or enter a passphrase.</comment>
   <data name="ODNAudioSampleRate" xml:space="preserve">
     <value>Default audio sampling rate</value>
   </data>
+  <data name="Tim2AlphaFormat" xml:space="preserve">
+    <value>Tim2画像のAlpha形式を選択してください。
+ファイルから正しく読み取ることができません。</value>
+  </data>
 </root>
