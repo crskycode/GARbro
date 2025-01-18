@@ -37,7 +37,7 @@ namespace GameRes.Formats.DigitalWorks
         public int  PaletteSize;
         public int  HeaderSize;
         public int  Colors;
-        public byte X_A;
+        public byte Alpha;
     }
 
     [Export(typeof(ImageFormat))]
@@ -87,7 +87,7 @@ namespace GameRes.Formats.DigitalWorks
                 PaletteSize = header.ToInt32 (0x14),
                 HeaderSize = header.ToUInt16 (0x1C),
                 Colors  = header.ToUInt16 (0x1E),
-                X_A = alpha, //header.ToUInt16(0x30) == 0?// not so sure, there will be omissions
+                Alpha = alpha, //header.ToUInt16(0x30) == 0?// not so sure, there will be omissions
             };
         }
 
@@ -132,9 +132,9 @@ namespace GameRes.Formats.DigitalWorks
             int image_size = (int)m_info.Width * (int)m_info.Height * pixel_size;
             var output = m_input.ReadBytes (image_size);
             if (pixel_size <= 8 && m_info.Colors > 0)
-                Palette = ReadPalette (m_info.Colors, m_info.X_A);
+                Palette = ReadPalette (m_info.Colors, m_info.Alpha);
 
-            if (pixel_size == 3 || pixel_size == 4 && m_info.X_A == 8)
+            if (pixel_size == 3 || pixel_size == 4 && m_info.Alpha == 8)
             {
                 for (int i = 0; i < image_size; i += pixel_size)
                 {
@@ -143,7 +143,7 @@ namespace GameRes.Formats.DigitalWorks
                     output[i+2] = r;
                 }
             }
-            if (pixel_size == 4 && m_info.X_A == 7)
+            if (pixel_size == 4 && m_info.Alpha == 7)
             {
                 for (int i = 0; i < image_size; i += 4)
                 {
@@ -156,7 +156,7 @@ namespace GameRes.Formats.DigitalWorks
                         output[i + 3] = (byte)(output[i + 3] << 1);
                 }
             }
-            if (pixel_size == 4 && m_info.X_A == 0)
+            if (pixel_size == 4 && m_info.Alpha == 0)
             {
                 for (int i = 0; i < image_size; i += 4)
                 {
@@ -172,7 +172,7 @@ namespace GameRes.Formats.DigitalWorks
         BitmapPalette ReadPalette (int color_num, byte X_A = 8)
         {
             var source = ImageFormat.ReadColorMap (m_input.AsStream,
-                color_num, X_A == 7 ? PaletteFormat.RgbX : X_A == 0 ? PaletteFormat.RgbX_Disposed : PaletteFormat.RgbA);
+                color_num, X_A == 7 ? PaletteFormat.RgbA7 : X_A == 0 ? PaletteFormat.RgbX : PaletteFormat.RgbA);
             var color_map = new Color[color_num];
 
             int parts = color_num / 32;
