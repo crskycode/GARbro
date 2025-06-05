@@ -1350,7 +1350,7 @@ exit 0</PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PostBuildEvent>if not exist "$(TargetDir)\GameData" mkdir "$(TargetDir)\GameData"
-xcopy "$(ProjectDir)\Resources\Formats.dat" "$(TargetDir)\GameData\" /D /Y &gt;NUL</PostBuildEvent>
+xcopy "$(ProjectDir)\Resources\*" "$(TargetDir)\GameData\" /D /Y &gt;NUL</PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\ZstdNet.1.4.5\build\ZstdNet.targets" Condition="Exists('..\packages\ZstdNet.1.4.5\build\ZstdNet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
