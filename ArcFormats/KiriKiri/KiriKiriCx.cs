@@ -89,7 +89,9 @@ namespace GameRes.Formats.KiriKiri
 
         public override string ToString ()
         {
-            return string.Format ("{0}(0x{1:X}, 0x{2:X})", base.ToString(), m_mask, m_offset);
+            return string.Format ("{0}(0x{1:X} 0x{2:X})\n[{3}]/[{4}]/[{5}]",
+                base.ToString(), m_mask, m_offset, string.Join(",", PrologOrder), 
+                string.Join(",", OddBranchOrder), string.Join(",", EvenBranchOrder));
         }
 
         static readonly byte[] s_ctl_block_signature = Encoding.ASCII.GetBytes (" Encryption control block");
@@ -100,7 +102,7 @@ namespace GameRes.Formats.KiriKiri
 
         public override void Init (ArcFile arc)
         {
-            if (ControlBlock != null)
+            if (ControlBlock != null && ControlBlock.Length > 0)
                 return;
             if (string.IsNullOrEmpty (TpmFileName))
                 throw new InvalidEncryptionScheme();

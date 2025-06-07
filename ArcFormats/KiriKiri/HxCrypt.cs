@@ -127,6 +127,8 @@ namespace GameRes.Formats.KiriKiri
             var name_map = new Dictionary<string, string>();
             try
             {
+                if (string.IsNullOrEmpty (NamesFile))
+                    NamesFile = "HxNames.lst";
                 FormatCatalog.Instance.ReadFileList (NamesFile, line => {
                     var name = line.Split (':');  // "hash:name"
                     if (name.Length != 2)
@@ -167,9 +169,13 @@ namespace GameRes.Formats.KiriKiri
                     var entry_info = new HxEntry();
                     if (path_map.TryGetValue (path_hash_str, out string path_str))
                         entry_info.Path = path_str;
+                    else
+                        entry_info.Path = path_hash_str;
                     var name_hash_str = BinaryToString (entry_hash);
                     if (name_map.TryGetValue (name_hash_str, out string name_str))
                         entry_info.Name = name_str;
+                    else
+                        entry_info.Name = name_hash_str;
                     entry_info.Key = (long)entry_key;
                     var id = (uint)entry_id;
                     entry_info.Id = (long)entry_id;
@@ -634,7 +640,7 @@ namespace GameRes.Formats.KiriKiri
 
         ulong GetOldRandom()
         {
-            /* These codes only work correctly in little endian mode! */
+            //NOTE: These codes only work correctly in little endian mode!
 
             var a = new M64();
             var b = new M64();
@@ -678,7 +684,7 @@ namespace GameRes.Formats.KiriKiri
 
         ulong GetNewRandom()
         {
-            /* These codes only work correctly in little endian mode! */
+            //NOTE: These codes only work correctly in little endian mode!
 
             var a = new M64();
             var b = new M64();
@@ -906,7 +912,6 @@ namespace GameRes.Formats.KiriKiri
         static object ReadObject(BinaryReader reader)
         {
             var type = reader.ReadByte();
-
             switch (type)
             {
                 case 0x00:
@@ -943,7 +948,8 @@ namespace GameRes.Formats.KiriKiri
                 }
                 default:
                 {
-                    throw new Exception("unknown object type");
+                    throw new Exception(string.Format(
+                        "unknown object type: 0x{0:X} @ 0x{1:X}", type, GetPosition(reader) - 1 ));
                 }
             }
         }
@@ -953,6 +959,11 @@ namespace GameRes.Formats.KiriKiri
             var count = ReadInt32(reader);
             var array = reader.ReadBytes(count);
             return array;
+        }
+
+        static long GetPosition(BinaryReader reader)
+        {
+            return reader.BaseStream.Position;
         }
 
         static object ReadArray(BinaryReader reader)
