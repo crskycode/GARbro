@@ -24,6 +24,7 @@
 //
 
 using GameRes.Utility;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
@@ -73,12 +74,43 @@ namespace GameRes.Formats.Adobe
                         0x05 != index.ReadUInt8() ||
                         0x01 != index.ReadUInt8())
                         return null;
-                    if (0x04 != index.ReadUInt8()) // invalid number signature
+                    
+                    uint offset;
+                    var dataTypeByte = index.ReadUInt8();
+                    
+                    //Modified by GanFan to support double offset and file length.
+                    switch(dataTypeByte)
+                    {
+                        case 0x04:
+                            offset = ReadInteger(index);
+                            break;
+                        case 0x05:
+                            offset = (uint)ReadBigEndianDouble(index);
+                            break;
+                        default :
+                            offset = 0;
+                            break;
+                    }
+                    if (0 == offset)
                         return null;
-                    uint offset = ReadInteger (index);
-                    if (0x04 != index.ReadUInt8())
+
+                    uint size;
+                    dataTypeByte = index.ReadUInt8();
+                    switch (dataTypeByte)
+                    {
+                        case 0x04:
+                            size = ReadInteger(index);
+                            break;
+                        case 0x05:
+                            size = (uint)ReadBigEndianDouble(index);
+                            break;
+                        default:
+                            size = 0;
+                            break;
+                    }
+                    if (0 ==  size)
                         return null;
-                    uint size = ReadInteger (index);
+
                     var entry = Create<PackedEntry> (name);
                     entry.Offset = offset;
                     entry.Size   = size;
@@ -113,6 +145,24 @@ namespace GameRes.Formats.Adobe
                 return u | b;
             u = (u | b & 0x7F) << 8;
             return u | input.ReadUInt8();
+        }
+
+        //Added by GanFan to support double offset and file length.
+        internal static double ReadBigEndianDouble(IBinaryStream input)
+        {
+            byte[] bytes = new byte[8];
+            for (int i = 0; i < 8; i++)
+            {
+                bytes[i] = input.ReadUInt8();
+            }
+
+            // Reverse Adobe AMF3 Big-Endian to .Net Little-Endian
+            if (BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(bytes);
+            }
+
+            return BitConverter.ToDouble(bytes, 0);
         }
     }
 }
