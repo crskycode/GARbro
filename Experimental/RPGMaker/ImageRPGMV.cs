@@ -41,7 +41,7 @@ namespace GameRes.Formats.RPGMaker
     public class RpgmvpFormat : ImageFormat
     {
         public override string         Tag { get { return "RPGMVP"; } }
-        public override string Description { get { return "RPG Maker engine image format"; } }
+        public override string Description { get { return "RPG Maker MV/MZ engine image format"; } }
         public override uint     Signature { get { return 0x4D475052; } } // 'RPGMV'
 
         public RpgmvpFormat ()

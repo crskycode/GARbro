@@ -31,7 +31,7 @@ namespace GameRes.Formats.RPGMaker
     public sealed class RpgmvoAudio : AudioFormat
     {
         public override string         Tag { get { return "RPGMVO"; } }
-        public override string Description { get { return "RPG Maker audio format (Ogg/Vorbis)"; } }
+        public override string Description { get { return "RPG Maker MV/MZ audio format (Ogg/Vorbis)"; } }
         public override uint     Signature { get { return 0x4D475052; } } // 'RPGMV'
         public override bool      CanWrite { get { return false; } }
 
