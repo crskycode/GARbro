@@ -269,9 +269,17 @@ namespace GameRes.Formats.FC01
         {
             m_output = new byte[m_pixels*3];
             var reader = new MrgDecoder (m_input, 0, (uint)m_pixels);
+            bool try_default_key = false;
             do
             {
-                reader.ResetKey (m_key);
+                if (!try_default_key)
+                {
+                    reader.ResetKey(Properties.Settings.Default.MCGLastKey);
+                }
+                else
+                {
+                    reader.ResetKey(m_key);
+                }
                 try
                 {
                     for (int i = 0; i < 3; ++i)
@@ -281,13 +289,22 @@ namespace GameRes.Formats.FC01
                         int src = 0;
                         for (int j = ChannelOrder[i]; j < m_output.Length; j += 3)
                         {
-                            m_output[j] = plane[src++];
+                                m_output[j] = plane[src++];
                         }
                     }
-//                    Trace.WriteLine (string.Format ("Found matching key {0:X2}", key), "[MCG]");
+                        Trace.WriteLine(string.Format("Found matching key {0:X2}", m_key), "[MCG]");
                 }
                 catch (InvalidFormatException)
                 {
+                    if (!try_default_key)
+                    {
+                        try_default_key = true;
+                        if (m_key == Properties.Settings.Default.MCGLastKey)
+                        {
+                            m_key++;
+                        }
+                        continue;
+                    }
                     m_key++;
                     continue;
                 }
