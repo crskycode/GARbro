@@ -134,6 +134,7 @@
     <Compile Include="AdvSys\ImageGWD.cs" />
     <Compile Include="Ail\ArcLNK2.cs" />
     <Compile Include="AIRNovel\ArcAIR.cs" />
+    <Compile Include="ArrayPoolGuard.cs" />
     <Compile Include="Artemis\ImageNekoPNG.cs" />
     <Compile Include="CsWare\AudioWAV.cs" />
     <Compile Include="CsWare\ImageGDT.cs" />
@@ -208,6 +209,7 @@
     <Compile Include="MAGES\ImageBIN.cs" />
     <Compile Include="Mugi\ArcBIN.cs" />
     <Compile Include="Musica\ArcPAK.cs" />
+    <Compile Include="NekoNyan\SpriteArcDAT.cs" />
     <Compile Include="NipponIchi\ArcCASN.cs" />
     <Compile Include="NipponIchi\ArcPSFS.cs" />
     <Compile Include="NipponIchi\ImageNMT.cs" />
@@ -1343,7 +1345,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Strings\arcStrings.ru-RU.resx" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>perl "$(SolutionDir)inc-revision.pl" "$(ProjectPath)" $(ConfigurationName)
