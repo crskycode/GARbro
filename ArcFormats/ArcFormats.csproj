@@ -776,6 +776,7 @@
     <Compile Include="Qlie\WidgetQLIE.xaml.cs">
       <DependentUpon>WidgetQLIE.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Sas5\ArcGAR.cs" />
     <Compile Include="Sas5\ArcIAR.cs" />
     <Compile Include="Sas5\ArcSec5.cs" />
     <Compile Include="Sas5\ArcWAR.cs" />
