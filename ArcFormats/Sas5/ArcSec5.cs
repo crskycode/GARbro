@@ -266,10 +266,15 @@ namespace GameRes.Formats.Sas5
                             size = section_size - 1;
                             break;
                         case 2:
-                            var tmp = new byte[0x1D];
-                            file.View.Read (offset + 1, tmp, 0, 0x1D);
-                            DecryptCodeSection (tmp);
-                            size = BitConverter.ToUInt32 (tmp, 0x19);
+                            if ("CODE" == name)
+                            {
+                                var tmp = new byte[0x1D];
+                                file.View.Read (offset + 1, tmp, 0, 0x1D);
+                                DecryptCodeSection (tmp);
+                                size = BitConverter.ToUInt32 (tmp, 0x19);
+                            }
+                            else
+                                size = file.View.ReadUInt32 (offset + 0x1A);
                             break;
                         default:
                             return null;
