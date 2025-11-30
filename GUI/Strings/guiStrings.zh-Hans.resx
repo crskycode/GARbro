@@ -548,6 +548,9 @@
   <data name="Type_audio" xml:space="preserve">
     <value>音频</value>
   </data>
+  <data name="Type_video" xml:space="preserve">
+    <value>视频</value>
+  </data>
   <data name="Type_image" xml:space="preserve">
     <value>图像</value>
   </data>
