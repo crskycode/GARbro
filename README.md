@@ -69,6 +69,6 @@ Japanese translation by [haniwa55](https://github.com/haniwa55)
 Contributors
 ------
 
-<a href="https://github.com/crskycode/GARbro/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=crskycode/GARbro" />
+<a href="https://github.com/nanami5270/GARbro-Mod/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=nanami5270/GARbro-Mod" />
 </a>
