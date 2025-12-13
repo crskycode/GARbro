@@ -284,6 +284,7 @@
     <Compile Include="FC01\ImageTIL.cs" />
     <Compile Include="FC01\ImageWM2.cs" />
     <Compile Include="FC01\ImageWMK.cs" />
+    <Compile Include="FrontWing\ArcDAT.cs" />
     <Compile Include="FrontWing\ArcFG.cs" />
     <Compile Include="FrontWing\ArcFLT.cs" />
     <Compile Include="FrontWing\ArcVAV.cs" />
