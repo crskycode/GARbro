@@ -59,21 +59,14 @@ namespace GameRes.Formats.Sas5
             var GetEntryName = CreateEntryNameDelegate (file.Name);
 
             index_offset += 0x20;
-            int real_count = 0;
-            for (int i = 0; i < count; ++i)
-            {
-                int block = file.View.ReadInt32 (index_offset + i * 0x14);
-                real_count += Convert.ToInt32 (block != block_start);
-            }
-
-            var dir = new List<Entry> (real_count);
+            var dir = new List<Entry> ();
             for (int i = 0; i < count; ++i)
             {
                 int block = file.View.ReadInt32 (index_offset);
                 if (block == block_start)
                     continue;
                 var entry = new Entry {
-                    Name    = GetEntryName (i),
+                    Name    = GetEntryName (i, block - block_start - 1),
                     Offset  = file.View.ReadUInt32 (index_offset + 4),
                     Size    = file.View.ReadUInt32 (index_offset + 12),
                 };
@@ -89,17 +82,17 @@ namespace GameRes.Formats.Sas5
             return new ArcFile (file, this, dir);
         }
 
-        internal Func<int, string> CreateEntryNameDelegate (string arc_name)
+        internal Func<int, int, string> CreateEntryNameDelegate (string arc_name)
         {
             var index = Sec5Opener.LookupIndex (arc_name);
             string base_name = Path.GetFileNameWithoutExtension (arc_name);
             if (null == index)
-                return n => GetDefaultName (base_name, n);
+                return (n, m) => GetDefaultName (base_name, n);
             else
-                return (n) => {
+                return (n, m) => {
                     Entry entry;
-                    if (index.TryGetValue (n, out entry))
-                        return entry.Name;
+                    if (index.TryGetValue (m, out entry))
+                        return entry.Name.Substring (1); // remove leading slash
                     return GetDefaultName (base_name, n);
                 };
         }
