@@ -112,29 +112,32 @@ namespace GameRes.Formats.Sas5
             }
             if (0 == match.Length)
                 return null;
-            using (var sec5 = new ArcView (match[0]))
+            foreach (var m in match)
             {
-                if (!sec5.View.AsciiEqual (0, "SEC5"))
-                    return null;
-                uint offset = 8;
-                while (offset < sec5.MaxOffset)
+                using (var sec5 = new ArcView (m))
                 {
-                    string id = sec5.View.ReadString (offset, 4, Encoding.ASCII);
-                    if ("ENDS" == id)
-                        break;
-                    uint section_size = sec5.View.ReadUInt32 (offset+4);
-                    offset += 8;
-                    if ("RESR" == id)
+                    if (!sec5.View.AsciiEqual (0, "SEC5"))
+                        continue;
+                    uint offset = 8;
+                    while (offset < sec5.MaxOffset)
                     {
-                        using (var resr = sec5.CreateStream (offset, section_size))
-                            return ReadResrSection (resr);
+                        string id = sec5.View.ReadString (offset, 4, Encoding.ASCII);
+                        if ("ENDS" == id)
+                            break;
+                        uint section_size = sec5.View.ReadUInt32 (offset+4);
+                        offset += 8;
+                        if ("RESR" == id)
+                        {
+                            using (var resr = sec5.CreateStream (offset, section_size))
+                                return ReadResrSection (resr);
+                        }
+                        if ("RES2" == id)
+                        {
+                            using (var res2 = sec5.CreateStream (offset, section_size))
+                                return ReadRes2Section (res2);
+                        }
+                        offset += section_size;
                     }
-                    if ("RES2" == id)
-                    {
-                        using (var res2 = sec5.CreateStream (offset, section_size))
-                            return ReadRes2Section (res2);
-                    }
-                    offset += section_size;
                 }
             }
             return null;
@@ -413,10 +416,12 @@ namespace GameRes.Formats.Sas5
                         arc_name = ReadString();
                     else if ("arc-index" == param_name)
                         arc_index = ReadInteger();
+                    else if ("arc-path" == param_name)
+                        name = ReadString();
                     else
                         SkipObject();
                 }
-                if (!string.IsNullOrEmpty (arc_name) && arc_index != null)
+                if (!string.IsNullOrEmpty (arc_name))
                 {
                     arc_name = Path.GetFileName (arc_name);
                     if (!map.ContainsKey (arc_name))
@@ -426,6 +431,8 @@ namespace GameRes.Formats.Sas5
                         Name = name,
                         Type = type,
                     };
+                    if (arc_index == null)
+                        arc_index = map[arc_name].Count;
                     map[arc_name][arc_index.Value] = entry;
                 }
             }
