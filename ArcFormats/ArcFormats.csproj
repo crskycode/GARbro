@@ -132,6 +132,8 @@
     <Compile Include="Adobe\ArcAIR.cs" />
     <Compile Include="Ads\ArcPAC.cs" />
     <Compile Include="AdvDx\ArcPKD.cs" />
+    <Compile Include="AdvRun\ArcARD.cs" />
+    <Compile Include="AdvRun\ImagePIZ.cs" />
     <Compile Include="AdvScripter\ArcPAK.cs" />
     <Compile Include="AdvSys\ArcAdvSys3.cs" />
     <Compile Include="AdvSys\ImageGWD.cs" />
