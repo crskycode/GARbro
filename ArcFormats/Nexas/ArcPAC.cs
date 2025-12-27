@@ -32,7 +32,6 @@ using System.ComponentModel.Composition;
 using GameRes.Compression;
 using GameRes.Formats.Strings;
 using GameRes.Utility;
-using System.Diagnostics;
 
 namespace GameRes.Formats.NeXAS
 {
@@ -238,7 +237,6 @@ namespace GameRes.Formats.NeXAS
                             name_buffer.Add ((byte)~c);
                         }
                         var name = Binary.GetCString (name_buffer.ToArray(), 0);
-                        Debug.Write(name);
                         if (string.IsNullOrWhiteSpace (name))
                             return null;
                         var entry = FormatCatalog.Instance.Create<Entry> (name);
