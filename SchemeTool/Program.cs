@@ -35,11 +35,11 @@ namespace SchemeTool
                 // Add scheme information here
 
 #if true
-                byte[] cb = File.ReadAllBytes(@"CxdecTable.bin"); //Also called ControlBlock, but this is the file generated from KrKrDump
+                byte[] cb = File.ReadAllBytes(@"MEM_10014628_00001000.mem");
                 var cb2 = MemoryMarshal.Cast<byte, uint>(cb);
                 for (int i = 0; i < cb2.Length; i++)
                     cb2[i] = ~cb2[i];
-                var cs = new GameRes.Formats.KiriKiri.CxScheme //Fill in this information obtained from the KrKrDump log
+                var cs = new GameRes.Formats.KiriKiri.CxScheme
                 {
                     Mask = 0x000,
                     Offset = 0x000,
@@ -49,40 +49,23 @@ namespace SchemeTool
                     ControlBlock = cb2.ToArray()
                 };
                 var crypt = new GameRes.Formats.KiriKiri.HxCrypt(cs);
-                crypt.RandomType = 0; //Information also obtained from the KrKrDump log
-                crypt.FilterKey = 0x0000000000000000; //Information also obtained from the KrKrDump log
-                crypt.NamesFile = "HxNames.lst";    //Call it something else to ensure that more than 1 game can be stored in the same folder
-                var dataKey = SoapHexBinary.Parse("0000000000000000000000000000000000000000000000000000000000000000").Value; //Index key
-                var dataNonce = SoapHexBinary.Parse("00000000000000000000000000000000").Value; //Index nonce
-                var patchKey = SoapHexBinary.Parse("0000000000000000000000000000000000000000000000000000000000000000").Value;
-                var patchNonce = SoapHexBinary.Parse("00000000000000000000000000000000").Value;
-
-                //Put inside this Dictionary all of the files the game contains, and put the correspoding index key and index nonce for each of the files (which is obtained from the KrKrDump log)
+                crypt.RandomType = 0;
+                crypt.FilterKey = 0x0000000000000000;
+                crypt.NamesFile = "HxNames.lst";
+                var keyA1 = SoapHexBinary.Parse("0000000000000000000000000000000000000000000000000000000000000000").Value;
+                var keyA2 = SoapHexBinary.Parse("00000000000000000000000000000000").Value;
+                var keyB1 = SoapHexBinary.Parse("0000000000000000000000000000000000000000000000000000000000000000").Value;
+                var keyB2 = SoapHexBinary.Parse("00000000000000000000000000000000").Value;
                 crypt.IndexKeyDict = new Dictionary<string, GameRes.Formats.KiriKiri.HxIndexKey>()
                 {
-                    { "data.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = dataKey, Key2 = dataNonce } },
-                    { "video.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = dataKey, Key2 = dataNonce } },
-                    { "others.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = dataKey, Key2 = dataNonce } },
-                    { "fgimage.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = dataKey, Key2 = dataNonce } },
-                    { "scn.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = dataKey, Key2 = dataNonce } },
-                    { "image.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = dataKey, Key2 = dataNonce } },
-                    { "voice.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = dataKey, Key2 = dataNonce } },
-                    { "evimage.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = dataKey, Key2 = dataNonce } },
-                    { "steam.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = dataKey, Key2 = dataNonce } },
-                    { "locale_en.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = dataKey, Key2 = dataNonce } },
-                    { "locale_cn.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = dataKey, Key2 = dataNonce } },
-                    { "patch.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = patchKey, Key2 = patchNonce } },
-                    { "patch_uncensored1.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = patchKey, Key2 = patchNonce } },
-                    { "patch_locale_cn.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = patchKey, Key2 = patchNonce } },
-                    { "uncensored1.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = patchKey, Key2 = patchNonce } },
-                    { "uncensored2.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = patchKey, Key2 = patchNonce } },
-                    { "uncensored3.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = patchKey, Key2 = patchNonce } },
+                    { "data.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = keyA1, Key2 = keyA2 } },
+                    { "update.xp3", new GameRes.Formats.KiriKiri.HxIndexKey { Key1 = keyB1, Key2 = keyB2 } },
                 };
 #else
                 GameRes.Formats.KiriKiri.ICrypt crypt = new GameRes.Formats.KiriKiri.XorCrypt(0x00);
 #endif
 
-                scheme.KnownSchemes.Add("gameTitle", crypt); //Add the game title to the dropdown menu to select the decryption method
+                // scheme.KnownSchemes.Add("game title", crypt);
             }
 
             var gameMap = typeof(GameRes.FormatCatalog).GetField("m_game_map", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
@@ -90,10 +73,8 @@ namespace SchemeTool
 
             if (gameMap != null)
             {
-                //While not mandatory, this makes the program automatically decrypt xp3 files with the names stated above when the same directory contains
-                //an executable with the same name, GarBro will automatically attempt to decrypt the loaded file with the scheme titled above (MAKE SURE THAT
-                //THE TITLE DO COINCIDE HERE AND ABOVE, OTHERWISE IT WON'T WORK)
-                gameMap.Add("gameExecutable.exe", "gameTitle");
+                // Add file name here
+                // gameMap.Add("game.exe", "game title");
             }
 
             // Save database
