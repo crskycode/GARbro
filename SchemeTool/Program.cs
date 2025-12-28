@@ -41,21 +41,21 @@ namespace SchemeTool
                     cb2[i] = ~cb2[i];
                 var cs = new GameRes.Formats.KiriKiri.CxScheme //Fill in this information obtained from the KrKrDump log
                 {
-                    Mask = 0x28E,
-                    Offset = 0x7A,
-                    PrologOrder = new byte[] { 2, 1, 0 },
-                    OddBranchOrder = new byte[] { 5, 0, 4, 2, 3, 1 },
-                    EvenBranchOrder = new byte[] { 7, 5, 4, 6, 3, 1, 2, 0 },
+                    Mask = 0x000,
+                    Offset = 0x000,
+                    PrologOrder = new byte[] { 0, 1, 2 },
+                    OddBranchOrder = new byte[] { 0, 1, 2, 3, 4, 5 },
+                    EvenBranchOrder = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 },
                     ControlBlock = cb2.ToArray()
                 };
                 var crypt = new GameRes.Formats.KiriKiri.HxCrypt(cs);
                 crypt.RandomType = 0; //Information also obtained from the KrKrDump log
-                crypt.FilterKey = 0xB60FF5AB08C907DB; //Information also obtained from the KrKrDump log
+                crypt.FilterKey = 0x0000000000000000; //Information also obtained from the KrKrDump log
                 crypt.NamesFile = "HxNames.lst";    //Call it something else to ensure that more than 1 game can be stored in the same folder
-                var dataKey = SoapHexBinary.Parse("587C3F0F8960A4A4B62CD52B431513B1C166DDD8FD59B343C5F762C3D0345016").Value; //Index key
-                var dataNonce = SoapHexBinary.Parse("C89AFF629DE48D3B1BD986A804930119").Value; //Index nonce
-                var patchKey = SoapHexBinary.Parse("8B572D62F899E57929421687329AF3DFAFF951A03D87B9D0382C8A1FC3D687DF").Value;
-                var patchNonce = SoapHexBinary.Parse("D222041CA4902962BA533FCD495F399E").Value;
+                var dataKey = SoapHexBinary.Parse("0000000000000000000000000000000000000000000000000000000000000000").Value; //Index key
+                var dataNonce = SoapHexBinary.Parse("00000000000000000000000000000000").Value; //Index nonce
+                var patchKey = SoapHexBinary.Parse("0000000000000000000000000000000000000000000000000000000000000000").Value;
+                var patchNonce = SoapHexBinary.Parse("00000000000000000000000000000000").Value;
 
                 //Put inside this Dictionary all of the files the game contains, and put the correspoding index key and index nonce for each of the files (which is obtained from the KrKrDump log)
                 crypt.IndexKeyDict = new Dictionary<string, GameRes.Formats.KiriKiri.HxIndexKey>()
