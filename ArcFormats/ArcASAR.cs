@@ -48,7 +48,7 @@ namespace GameRes.Formats.Chromium
     {
         public override string         Tag { get { return "ASAR"; } }
         public override string Description { get { return "Electron/Atom Shell archive format"; } }
-        public override uint     Signature { get { return 0; } }
+        public override uint     Signature { get { return 0x00000004; } }
         public override bool  IsHierarchic { get { return true; } }
         public override bool      CanWrite { get { return false; } }
 
@@ -59,6 +59,8 @@ namespace GameRes.Formats.Chromium
 
         public override ArcFile TryOpen (ArcView file)
         {
+            if (file.View.ReadUInt32 (4) != file.View.ReadUInt32 (8) + 4)
+                return null;
             uint index_size = file.View.ReadUInt32 (0x0C);
             string json = file.View.ReadString (0x10, index_size, Encoding.UTF8);
             var dict = JsonConvert.DeserializeObject<AsarNode> (json);
