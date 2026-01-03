@@ -72,7 +72,7 @@ namespace GameRes.Formats.Enigma {
                 index_offset++;
                 counts[counts.Count - 1]--;
                 if (type == NodeTypes.File) {
-                    var entry = Create<Entry>(Path.Combine(names.Append(name).ToArray()));
+                    var entry = Create<Entry>(Path.Combine(names.Concat(new[] { name }).ToArray()));
                     uint unpacked_size = file.View.ReadUInt32(index_offset + 2);
                     uint size = file.View.ReadUInt32(index_offset + 49);
                     if (unpacked_size != size)
