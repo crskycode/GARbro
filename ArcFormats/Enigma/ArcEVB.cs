@@ -32,6 +32,7 @@ using GameRes.Utility;
 
 namespace GameRes.Formats.Enigma {
     public enum NodeTypes {
+        AbsoluteDrive = 1,
         File = 2,
         Folder = 3,
     }
@@ -83,10 +84,6 @@ namespace GameRes.Formats.Enigma {
                     if (!entry.CheckPlacement(file.MaxOffset))
                         return null;
                     dir.Add(entry);
-                    while (counts.Count > 0 && counts[counts.Count - 1] == 0) {
-                        counts.RemoveAt(counts.Count - 1);
-                        names.RemoveAt(names.Count - 1);
-                    }
                     index_offset += 53;
                 }
                 else if (type == NodeTypes.Folder) {
@@ -94,8 +91,17 @@ namespace GameRes.Formats.Enigma {
                     names.Add(name);
                     index_offset += 25;
                 }
+                else if (type == NodeTypes.AbsoluteDrive) {
+                    counts.Add(item_count);
+                    names.Add(name[0].ToString());
+                    index_offset -= 4;
+                }
                 else
                     return null;
+                while (counts.Count > 0 && counts[counts.Count - 1] == 0) {
+                    counts.RemoveAt(counts.Count - 1);
+                    names.RemoveAt(names.Count - 1);
+                }
             }
 
             return new ArcFile(file, this, dir);
