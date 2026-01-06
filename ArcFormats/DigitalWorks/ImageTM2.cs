@@ -133,19 +133,32 @@ namespace GameRes.Formats.DigitalWorks
             double pixel_size = (double)m_info.BPP / 8;
             int image_size = (int)((int)m_info.Width * (int)m_info.Height * pixel_size);
             var output = m_input.ReadBytes (image_size);
-            if (pixel_size <= 8 && m_info.Colors > 0)
+            if (pixel_size <= 1 && m_info.Colors > 0) // Indexed images
                 Palette = ReadPalette (m_info.Colors, m_info.Alpha);
 
-            if (pixel_size == 3 || pixel_size == 4 && m_info.Alpha == 8)
+            // Handle 24bpp and 32bpp (Direct Color)
+            if (pixel_size == 3 || (pixel_size == 4 && m_info.Alpha == 8))
             {
                 for (int i = 0; i < image_size; i += (int)pixel_size)
                 {
+                    // Swap R and B channels
                     byte r = output[i];
                     output[i] = output[i+2];
                     output[i+2] = r;
+
+                    // Fix Alpha for 32bpp (Double Alpha Scaling)
+                    if (pixel_size == 4)
+                    {
+                        byte a = output[i + 3];
+                        if (a > 0)
+                        {
+                            output[i + 3] = (byte)Math.Min(255, a * 2);
+                        }
+                    }
                 }
             }
-            if (pixel_size == 4 && m_info.Alpha == 7)
+            // Handle specific RGBX (Alpha 7) case
+            else if (pixel_size == 4 && m_info.Alpha == 7)
             {
                 for (int i = 0; i < image_size; i += 4)
                 {
@@ -158,7 +171,8 @@ namespace GameRes.Formats.DigitalWorks
                         output[i + 3] = (byte)(output[i + 3] << 1);
                 }
             }
-            if (pixel_size == 4 && m_info.Alpha == 0)
+            // Handle No Alpha case
+            else if (pixel_size == 4 && m_info.Alpha == 0)
             {
                 for (int i = 0; i < image_size; i += 4)
                 {
@@ -175,6 +189,21 @@ namespace GameRes.Formats.DigitalWorks
         {
             var source = ImageFormat.ReadColorMap (m_input.AsStream,
                 color_num, X_A == 7 ? PaletteFormat.RgbA7 : X_A == 0 ? PaletteFormat.RgbX : PaletteFormat.RgbA);
+
+            // Scaled Alpha for Indexed Palettes (KID/PS2 Fix)
+            if (X_A != 0)
+            {
+                for (int i = 0; i < source.Length; i++)
+                {
+                    byte a = source[i].A;
+                    if (a > 0)
+                    {
+                        byte newAlpha = (byte)Math.Min(255, a * 2);
+                        source[i] = Color.FromArgb(newAlpha, source[i].R, source[i].G, source[i].B);
+                    }
+                }
+            }
+
             var color_map = new Color[color_num];
 
             if (color_num == 16){
