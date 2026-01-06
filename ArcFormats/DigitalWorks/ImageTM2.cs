@@ -66,12 +66,12 @@ namespace GameRes.Formats.DigitalWorks
             byte bpp = header[0x23];
             switch (bpp)
             {
-                case 1: bpp = 16; break;
-                case 2: bpp = 24; break;
-                case 3: bpp = 32; break;
-                case 4: bpp = 4; break; //16color
-                case 5: bpp = 8; break;
-                default: return null;
+            case 1: bpp = 16; break;
+            case 2: bpp = 24; break;
+            case 3: bpp = 32; break;
+            case 4: bpp = 4; break; //16color
+            case 5: bpp = 8; break;
+            default: return null;
             }
             byte alpha;
             switch (AlphaFormat.Get<String>())
@@ -218,13 +218,13 @@ namespace GameRes.Formats.DigitalWorks
 
             int dst = 0;
             for (int part = 0; part < parts; part++)
-                for (int block = 0; block < blocks; block++)
-                    for (int row = 0; row < rows; row++)
-                    {
-                        int src = (part * rows * blocks + row * rows + block) * colors;
-                        Array.Copy (source, src, color_map, dst, colors);
-                        dst += colors;
-                    }
+            for (int block = 0; block < blocks; block++)
+            for (int row = 0; row < rows; row++)
+            {
+                int src = (part * rows * blocks + row * rows + block) * colors;
+                Array.Copy (source, src, color_map, dst, colors);
+                dst += colors;
+            }
             return new BitmapPalette (color_map);
         }
     }
