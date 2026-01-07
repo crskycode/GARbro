@@ -150,7 +150,7 @@ namespace GameRes.Formats.Malie
             var header = new byte[0x10];
             foreach (var scheme in KnownSchemes.Values)
             {
-                var decryptor = scheme.CreateDecryptor();
+                var decryptor = file.View.AsciiEqual (0, "LIB") ? new NoOpDecryptor() : scheme.CreateDecryptor();
                 ReadEncrypted (file.View, decryptor, 0, header, 0, 0x10);
                 ILibIndexReader reader;
                 if (Binary.AsciiEqual (header, 0, "LIBP"))

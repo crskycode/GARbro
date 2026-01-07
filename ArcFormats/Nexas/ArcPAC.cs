@@ -1,6 +1,6 @@
 //! \file       ArcNexas.cs
 //! \date       Sat Mar 14 18:03:04 2015
-//! \brief      NeXAS enginge resource archives implementation.
+//! \brief      NeXAS engine resource archives implementation.
 //
 // Copyright (C) 2015 by morkt
 //
@@ -45,6 +45,14 @@ namespace GameRes.Formats.NeXAS
         None2,
         Zstd,
         ZstdOrNone,
+        NeedDecryptionOnly = 0xFDFD, // internal magic number
+    }
+
+    internal interface INexasIndexReader
+    {
+        Compression PackType { get; }
+
+        List<Entry> Read ();
     }
 
     public class PacArchive : ArcFile
@@ -79,17 +87,30 @@ namespace GameRes.Formats.NeXAS
         {
             if (!file.View.AsciiEqual (0, "PAC") || 'K' == file.View.ReadByte (3))
                 return null;
-            var reader = new IndexReader (file, PacEncoding.Get<Encoding>());
-            var dir = reader.Read();
+
+            List<Entry> dir = null;
+            INexasIndexReader reader = new IndexReader (file, PacEncoding.Get<Encoding>());
+            try
+            {
+                dir = reader.Read();
+            }
+            catch {}
+
             if (null == dir)
-                return null;
+            {
+                reader = new OldIndexReader (file);
+                dir = reader.Read();
+
+                if (null == dir)
+                    return null;
+            }
 
             if (Compression.None == reader.PackType)
                 return new ArcFile (file, this, dir);
             return new PacArchive (file, this, dir, reader.PackType);
         }
 
-        internal sealed class IndexReader
+        internal sealed class IndexReader : INexasIndexReader
         {
             ArcView     m_file;
             int         m_count;
@@ -191,13 +212,71 @@ namespace GameRes.Formats.NeXAS
             }
         }
 
+        internal sealed class OldIndexReader : INexasIndexReader
+        {
+            ArcView     m_file;
+            uint        m_header_size;
+
+            public Compression PackType { get { return Compression.NeedDecryptionOnly; } }
+
+            public OldIndexReader (ArcView file)
+            {
+                m_file = file;
+                m_header_size = file.View.ReadUInt32 (3);
+            }
+
+            List<Entry> m_dir;
+
+            public List<Entry> Read ()
+            {
+                m_dir = new List<Entry> ();
+                using (var input = m_file.CreateStream())
+                {
+                    input.Position = 7;
+                    while (input.Position < m_header_size)
+                    {
+                        byte c;
+                        List<byte> name_buffer = new List<byte>();
+                        while (true)
+                        {
+                            c = (byte)input.ReadByte();
+                            if (c == 0) break;
+                            name_buffer.Add ((byte)~c);
+                        }
+                        var name = Binary.GetCString (name_buffer.ToArray(), 0);
+                        if (string.IsNullOrWhiteSpace (name))
+                            return null;
+                        var entry = FormatCatalog.Instance.Create<Entry> (name);
+                        entry.Offset     = input.ReadUInt32() + m_header_size;
+                        entry.Size       = input.ReadUInt32();
+                        if (!entry.CheckPlacement (m_file.MaxOffset))
+                            return null;
+                        m_dir.Add (entry);
+                    }
+                }
+                return m_dir;
+            }
+        }
+
         public override Stream OpenEntry (ArcFile arc, Entry entry)
         {
             var input = arc.File.CreateStream (entry.Offset, entry.Size);
             var pac = arc as PacArchive;
             var pent = entry as PackedEntry;
-            if (null == pac || null == pent || !pent.IsPacked)
+
+            if (null == pac)
                 return input;
+            if (Compression.NeedDecryptionOnly == pac.PackType)
+            {
+                var data = new byte[entry.Size];
+                input.Read (data, 0, data.Length);
+                for (int i = 0; i < Math.Min (3, data.Length); i++)
+                    data[i] = (byte)~data[i];
+                return new BinMemoryStream (data, entry.Name);
+            }
+            if (null == pent || !pent.IsPacked)
+                return input;
+
             switch (pac.PackType)
             {
             case Compression.Lzss:

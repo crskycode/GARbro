@@ -214,6 +214,7 @@
     <Compile Include="Dice\ArcRLZ.cs" />
     <Compile Include="Dice\AudioKWF.cs" />
     <Compile Include="Dice\ImageRBP.cs" />
+    <Compile Include="Duke\ArcDAT.cs" />
     <Compile Include="Electriciteit\ArcDAT.cs" />
     <Compile Include="Eve\ArcGM.cs" />
     <Compile Include="Eve\AudioWV.cs" />
