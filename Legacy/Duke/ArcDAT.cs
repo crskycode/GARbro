@@ -42,8 +42,11 @@ namespace GameRes.Formats.Duke
 
         public override ArcFile TryOpen (ArcView file)
         {
+            if (!file.Name.HasExtension (".dat"))
+                return null;
+
             int count = (int)(file.View.ReadUInt32 (0) ^ 0xfa261efb);
-            if (!file.Name.HasExtension (".dat") || !IsSaneCount (count))
+            if (!IsSaneCount (count))
                 return null;
 
             uint index_offset = 4;

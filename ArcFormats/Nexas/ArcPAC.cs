@@ -45,7 +45,14 @@ namespace GameRes.Formats.NeXAS
         None2,
         Zstd,
         ZstdOrNone,
-        NeedDecryptionOnly = 0xFDFD, // magic number, no actual meaning
+        NeedDecryptionOnly = 0xFDFD, // internal magic number
+    }
+
+    internal interface INexasIndexReader
+    {
+        Compression PackType { get; }
+
+        List<Entry> Read ();
     }
 
     public class PacArchive : ArcFile
@@ -82,7 +89,7 @@ namespace GameRes.Formats.NeXAS
                 return null;
 
             List<Entry> dir = null;
-            dynamic reader = new IndexReader (file, PacEncoding.Get<Encoding>());
+            INexasIndexReader reader = new IndexReader (file, PacEncoding.Get<Encoding>());
             try
             {
                 dir = reader.Read();
@@ -103,7 +110,7 @@ namespace GameRes.Formats.NeXAS
             return new PacArchive (file, this, dir, reader.PackType);
         }
 
-        internal sealed class IndexReader
+        internal sealed class IndexReader : INexasIndexReader
         {
             ArcView     m_file;
             int         m_count;
@@ -205,7 +212,7 @@ namespace GameRes.Formats.NeXAS
             }
         }
 
-        internal sealed class OldIndexReader
+        internal sealed class OldIndexReader : INexasIndexReader
         {
             ArcView     m_file;
             uint        m_header_size;
