@@ -66,7 +66,7 @@ namespace GameRes.Formats.Broccoli {
                     var entry = Create<P00Entry>(name);
                     entry.Offset = index_file.View.ReadUInt32(index_offset + 4);
                     entry.Size   = index_file.View.ReadUInt32(index_offset + 8);
-                    var data_file_name = Path.ChangeExtension(file.Name, string.Format("p{0:00}", entry.Size >> 28));
+                    var data_file_name = Path.ChangeExtension(file.Name, string.Format("p{0:00}", entry.Offset >> 28));
                     if (!VFS.FileExists(data_file_name))
                         return null;
                     entry.FileName = data_file_name;
