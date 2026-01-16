@@ -140,7 +140,7 @@ namespace GameRes.Formats.Musica
             Extensions = new string[] { "paz", "dat" };
             Signatures = new uint[] {
                 0x858F8493, 0x8F889395, 0x6E656465, 0x848F8486, 0x61657453, 0x6873616D, 0x92808483,
-                0x6E697274, 0
+                0x6E697274, 0x5F465342, 0
             };
             ContainedFormats = new string[] { "PNG", "ANI/PAZ", "SQZ", "OGG", "WAV", "TXT" };
         }
