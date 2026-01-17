@@ -109,7 +109,7 @@ namespace GameRes.Formats.NitroPlus
 
         public override ArcFile TryOpen (ArcView file)
         {
-            int version = file.View.ReadByte (3);
+            int version = file.View.ReadByte (3) - '0';
             int count = file.View.ReadInt32 (0x18);
             if (!IsSaneCount (count))
                 return null;
