@@ -99,6 +99,7 @@
     <Compile Include="BlackButterfly\ArcDAT.cs" />
     <Compile Include="Blucky\Aliases.cs" />
     <Compile Include="Bom\ImageGRP.cs" />
+    <Compile Include="Broccoli\ArcP00.cs" />
     <Compile Include="CottonClub\ImageLMG.cs" />
     <Compile Include="Desire\ArcDSV.cs" />
     <Compile Include="Desire\ImageDES.cs" />
