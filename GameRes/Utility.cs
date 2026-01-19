@@ -113,6 +113,11 @@ namespace GameRes.Utility
             return GetCString (data, index, length_limit, Encodings.cp932);
         }
 
+        public static string GetCString (byte[] data, int index, Encoding enc)
+        {
+            return GetCString (data, index, data.Length - index, enc);
+        }
+
         public static string GetCString (byte[] data, int index)
         {
             return GetCString (data, index, data.Length - index, Encodings.cp932);

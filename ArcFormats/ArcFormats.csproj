@@ -139,6 +139,8 @@
     <Compile Include="AdvSys\ImageGWD.cs" />
     <Compile Include="Ail\ArcLNK2.cs" />
     <Compile Include="AIRNovel\ArcAIR.cs" />
+    <Compile Include="aNCHOR\ArcFPD.cs" />
+    <Compile Include="aNCHOR\AudioFCD.cs" />
     <Compile Include="Artemis\ImageNekoPNG.cs" />
     <Compile Include="CsWare\AudioWAV.cs" />
     <Compile Include="CsWare\ImageGDT.cs" />
@@ -1091,6 +1093,7 @@
     <Compile Include="KiriKiri\KiriKiriCx.cs" />
     <Compile Include="KogadoCocotte.cs" />
     <Compile Include="AudioOGG.cs" />
+    <Compile Include="aPLibStream.cs" />
     <Compile Include="LzssStream.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
