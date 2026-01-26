@@ -139,6 +139,8 @@
     <Compile Include="AdvSys\ImageGWD.cs" />
     <Compile Include="Ail\ArcLNK2.cs" />
     <Compile Include="AIRNovel\ArcAIR.cs" />
+    <Compile Include="aNCHOR\ArcFPD.cs" />
+    <Compile Include="aNCHOR\AudioFCD.cs" />
     <Compile Include="Artemis\ImageNekoPNG.cs" />
     <Compile Include="CsWare\AudioWAV.cs" />
     <Compile Include="CsWare\ImageGDT.cs" />
@@ -157,6 +159,7 @@
     <Compile Include="FC01\ArcBDT.cs" />
     <Compile Include="FC01\ArcSCXA.cs" />
     <Compile Include="FC01\BdtTables.cs" />
+    <Compile Include="Fog\ArcDAT.cs" />
     <Compile Include="GScripter\ArcDATA.cs" />
     <Compile Include="Ism\ImagePNG.cs" />
     <Compile Include="Kid\ArcDATRAW.cs" />
@@ -178,6 +181,7 @@
     <Compile Include="Illusion\ArcPP.cs" />
     <Compile Include="Interheart\ImageBMP.cs" />
     <Compile Include="Interheart\ImageHMP.cs" />
+    <Compile Include="CatSystem\ArcZT.cs" />
     <Compile Include="JamCreation\ArcDAT.cs" />
     <Compile Include="JamCreation\ImageDPO.cs" />
     <Compile Include="AliceSoft\ArcAAR.cs" />
@@ -1094,6 +1098,7 @@
     <Compile Include="KiriKiri\KiriKiriCx.cs" />
     <Compile Include="KogadoCocotte.cs" />
     <Compile Include="AudioOGG.cs" />
+    <Compile Include="aPLibStream.cs" />
     <Compile Include="LzssStream.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">

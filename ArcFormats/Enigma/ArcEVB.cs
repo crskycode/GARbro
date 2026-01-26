@@ -29,6 +29,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using GameRes.Utility;
+using GameRes.Compression;
 
 namespace GameRes.Formats.Enigma {
     public enum NodeTypes {
@@ -45,14 +46,34 @@ namespace GameRes.Formats.Enigma {
         public override bool  IsHierarchic { get { return true; } }
         public override bool      CanWrite { get { return false; } }
 
+        public EvbPackOpener() {
+            Signatures = new uint[] { 0x425645, 0x905a4d, 0 };
+            Extensions = new[] { "exe" };
+        }
+
         public override ArcFile TryOpen(ArcView file) {
-            uint index_size = file.View.ReadUInt32(0x40) + 68;
-            uint index_offset = 0x4F;
+            uint base_offset = 0;
+            if (file.View.AsciiEqual(0, "MZ")) {
+                var exe = new ExeFile(file);
+                var sig = new byte[] { 0x45, 0x56, 0x42, 0x00 };
+                if (exe.ContainsSection(".enigma1")) {
+                    var ofs = exe.FindString(exe.Sections[".enigma1"], sig);
+                    if (ofs != -1)
+                        base_offset = (uint)ofs;
+                }
+                if (base_offset == 0)
+                    return null;
+            }
+            else if (!file.View.AsciiEqual(0, "EVB"))
+                return null;
+
+            uint index_size = file.View.ReadUInt32(base_offset + 0x40) + base_offset + 68;
+            uint index_offset = base_offset + 0x4F;
             uint file_offset = index_size;
 
             var dir = new List<Entry>();
             var name_buffer = new StringBuilder();
-            var counts = new List<uint> { file.View.ReadUInt32(0x4C) };
+            var counts = new List<uint> { file.View.ReadUInt32(base_offset + 0x4C) };
             var names = new List<string> { "" };
 
             while (index_offset < index_size - 4) {
@@ -73,12 +94,12 @@ namespace GameRes.Formats.Enigma {
                 index_offset++;
                 counts[counts.Count - 1]--;
                 if (type == NodeTypes.File) {
-                    var entry = Create<Entry>(Path.Combine(names.Concat(new[] { name }).ToArray()));
+                    var entry = Create<PackedEntry>(Path.Combine(names.Concat(new[] { name }).ToArray()));
                     uint unpacked_size = file.View.ReadUInt32(index_offset + 2);
                     uint size = file.View.ReadUInt32(index_offset + 49);
-                    if (unpacked_size != size)
-                        return null; // packed entry not implemented
+                    entry.IsPacked = unpacked_size != size;
                     entry.Offset = file_offset;
+                    entry.UnpackedSize = unpacked_size;
                     entry.Size = size;
                     file_offset += size;
                     if (!entry.CheckPlacement(file.MaxOffset))
@@ -105,6 +126,31 @@ namespace GameRes.Formats.Enigma {
             }
 
             return new ArcFile(file, this, dir);
+        }
+
+        public override Stream OpenEntry(ArcFile arc, Entry entry) {
+            var pent = entry as PackedEntry;
+            if (pent.IsPacked) {
+                uint header_size = arc.File.View.ReadUInt32(pent.Offset);
+                uint offset = header_size;
+                Stream input = null;
+
+                for (uint i = 8; i < header_size; i += 12) {
+                    uint chunk_size = arc.File.View.ReadUInt32(pent.Offset + i);
+                    var chunk = new aPLibStream(
+                        arc.File.CreateStream(pent.Offset + offset, chunk_size)
+                    );
+                    if (input != null)
+                        input = new ConcatStream(input, chunk);
+                    else
+                        input = chunk;
+                    offset += chunk_size;
+                }
+
+                return input;
+            }
+            else
+                return arc.File.CreateStream(pent.Offset, pent.Size);
         }
     }
 }

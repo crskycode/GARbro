@@ -149,6 +149,7 @@
   <ItemGroup>
     <Compile Include="Artemis\ImageIPT.cs" />
     <Compile Include="Cabinet\ArcCAB.cs" />
+    <Compile Include="CatSystem\ArcIRIS.cs" />
     <Compile Include="CellWorks\ArcDB.cs" />
     <Compile Include="Artemis\GplexBuffers.cs" />
     <Compile Include="Microsoft\ArcEXE.cs" />
