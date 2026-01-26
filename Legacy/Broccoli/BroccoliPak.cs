@@ -11,7 +11,7 @@ namespace GameRes.Formats.Broccoli
     public class PakOpener : ArchiveFormat
     {
         public override string         Tag { get { return "PAK/BROCCOLI"; } }
-        public override string Description { get { return "Broccoli/Yuzusoft port resource archive"; } }
+        public override string Description { get { return "Broccoli"; } }
         public override uint     Signature { get { return 0; } } 
         public override bool  IsHierarchic { get { return true; } }
         public override bool      CanWrite { get { return false; } } 
