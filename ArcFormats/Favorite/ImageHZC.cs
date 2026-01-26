@@ -87,6 +87,7 @@ namespace GameRes.Formats.FVP
                     {
                         var decoder = VFS.OpenImage (entry);
                         var image = decoder.Image;
+                        decoder.Dispose();
                         if (null == image)
                             throw new InvalidFormatException ("Failed to decode base image.");
                         var converted = image.Bitmap;
