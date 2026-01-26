@@ -25,7 +25,7 @@ namespace GameRes.Formats.Broccoli
                 Name = Path.GetFileNameWithoutExtension(file.Name) + ".mpg",
                 Type = "video",
                 Offset = 0,
-                // CORREÇÃO: Adicionado (uint) para converter o tamanho
+                // FIX: Added (uint) cast for size conversion
                 Size = (uint)file.MaxOffset 
             };
 

@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.Composition;
 using System.IO;
-using System.Linq; // Adicionado para operações de lista se necessário
+using System.Linq; // Added for list operations if necessary
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using GameRes.Utility;
@@ -17,7 +17,7 @@ namespace GameRes.Formats.Broccoli
         
         public override ImageMetaData ReadMetaData (IBinaryStream file)
         {
-            // Precisamos descomprimir para saber o tamanho real
+            // We need to decompress to know the real size
             using (var data = DecompressData(file))
             {
                 if (data == null) return null;
@@ -26,7 +26,7 @@ namespace GameRes.Formats.Broccoli
                 uint width = 0, height = 0;
                 int bpp = 32; 
 
-                // Mesma lógica de resolução do seu script Python
+                // Same resolution logic as your Python script
                 if (size == 1920000)      { width = 800; height = 600; }
                 else if (size == 1228800) { width = 640; height = 480; }
                 else if (size == 1536000) { width = 800; height = 480; }
@@ -35,7 +35,7 @@ namespace GameRes.Formats.Broccoli
                 else if (size == 96000)   { width = 200; height = 120; }
                 else
                 {
-                    // Fallback: Tenta ler header de 4 bytes (Width/Height)
+                    // Fallback: Try to read 4-byte header (Width/Height)
                     if (size > 4)
                     {
                         data.Position = 0;
@@ -67,7 +67,7 @@ namespace GameRes.Formats.Broccoli
             {
                 if (stream == null) throw new InvalidFormatException();
 
-                // Pular header de 4 bytes se for o caso do fallback
+                // Skip 4-byte header if fallback logic was used
                 int headerSkip = 0;
                 if (stream.Length != info.Width * info.Height * (info.BPP / 8))
                 {
@@ -77,7 +77,7 @@ namespace GameRes.Formats.Broccoli
 
                 stream.Position = headerSkip;
 
-                // Caso 1: Máscara isolada (Grayscale)
+                // Case 1: Isolated Mask (Grayscale)
                 if (info.BPP == 8)
                 {
                     var gray = new byte[info.Width * info.Height];
@@ -85,15 +85,15 @@ namespace GameRes.Formats.Broccoli
                     return ImageData.Create(info, PixelFormats.Gray8, null, gray);
                 }
 
-                // Caso 2: Imagem Colorida (BGRX)
-                // Devido às limitações da API, não vamos carregar a máscara (_m) aqui.
-                // O GARbro mostrará a imagem com fundo preto/sólido.
-                // Use o seu script Python para combinar com a máscara depois.
+                // Case 2: Colored Image (BGRX)
+                // Due to API limitations, we won't load the mask (_m) here.
+                // GARbro will show the image with a black/solid background.
+                // Use your Python script to combine with the mask later.
                 
                 var pixels = new byte[info.Width * info.Height * 4];
                 stream.Read(pixels, 0, pixels.Length);
 
-                // O formato é geralmente Bgr32 (o 4º byte é lixo/padding, não alpha real)
+                // The format is usually Bgr32 (the 4th byte is garbage/padding, not real alpha)
                 return ImageData.Create(info, PixelFormats.Bgr32, null, pixels);
             }
         }
@@ -109,7 +109,7 @@ namespace GameRes.Formats.Broccoli
             byte[] buffer = input.ReadBytes(2048);
             int zlibOffset = -1;
 
-            // Busca assinatura ZLIB (78 9C, etc)
+            // Search for ZLIB signature (78 9C, etc)
             for (int i = 0; i < buffer.Length - 1; i++)
             {
                 if (buffer[i] == 0x78 && 
@@ -124,7 +124,7 @@ namespace GameRes.Formats.Broccoli
 
             try 
             {
-                // Pula o header ZLIB (2 bytes) para usar DeflateStream padrão
+                // Skip ZLIB header (2 bytes) to use standard DeflateStream
                 input.Position = zlibOffset + 2; 
 
                 using (var zStream = new System.IO.Compression.DeflateStream(input.AsStream, System.IO.Compression.CompressionMode.Decompress, true))
