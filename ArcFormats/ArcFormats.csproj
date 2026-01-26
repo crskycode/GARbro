@@ -180,6 +180,7 @@
     <Compile Include="Illusion\ArcPP.cs" />
     <Compile Include="Interheart\ImageBMP.cs" />
     <Compile Include="Interheart\ImageHMP.cs" />
+    <Compile Include="CatSystem\ArcZT.cs" />
     <Compile Include="JamCreation\ArcDAT.cs" />
     <Compile Include="JamCreation\ImageDPO.cs" />
     <Compile Include="AliceSoft\ArcAAR.cs" />
