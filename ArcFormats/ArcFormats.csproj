@@ -610,6 +610,7 @@
     <Compile Include="MD5.cs" />
     <Compile Include="Moonhir\ArcFPK.cs" />
     <Compile Include="Morning\ArcTTD.cs" />
+	<Compile Include="Musica\ArcMIP.cs" />
     <Compile Include="Musica\ArcPAZ.cs" />
     <Compile Include="Musica\ArcSQZ.cs" />
     <Compile Include="Musica\WidgetPAZ.xaml.cs">
