@@ -31,19 +31,6 @@ using GameRes.Utility;
 
 namespace GameRes.Formats.FrontWing
 {
-    internal class TimeLeapArchive : ArcFile
-    {
-        private bool m_encrypted;
-
-        public bool IsEncrypted { get { return m_encrypted; } }
-
-        public TimeLeapArchive (ArcView arc, ArchiveFormat impl, ICollection<Entry> dir, bool encrypted)
-            : base (arc, impl, dir)
-        {
-            m_encrypted = encrypted;
-        }
-    }
-
     [Export(typeof(ArchiveFormat))]
     public class DatOpener : ArchiveFormat
     {
@@ -65,17 +52,7 @@ namespace GameRes.Formats.FrontWing
             if (file.MaxOffset < index_size + 4)
                 return null;
             var index = file.View.ReadBytes (file.MaxOffset - 4 - index_size, (uint)index_size);
-            bool encrypted = false;
-            for (int i = 0; i < 40 && index[i] != 0; i++)
-            {
-                if (index[i] < 0x20 || index[i] >= 0x7f)
-                {
-                    encrypted = true;
-                    break;
-                }
-            }
-            if (encrypted)
-                NibbleSwap (index);
+            NibbleSwap (index);
 
             int index_offset = 0;
             var dir = new List<Entry> (count);
@@ -90,7 +67,7 @@ namespace GameRes.Formats.FrontWing
                 index_offset += 0x50;
                 dir.Add (entry);
             }
-            return new TimeLeapArchive (file, this, dir, encrypted);
+            return new ArcFile (file, this, dir);
         }
 
         static readonly byte[] keyTable = {
@@ -103,20 +80,16 @@ namespace GameRes.Formats.FrontWing
 
         public override Stream OpenEntry (ArcFile arc, Entry entry)
         {
-            var tarc = arc as TimeLeapArchive;
-            var data = tarc.File.View.ReadBytes (entry.Offset, entry.Size);
-            if (tarc.IsEncrypted)
+            var data = arc.File.View.ReadBytes (entry.Offset, entry.Size);
+            for (int i = 1; i < data.Length; i += 4)
             {
-                for (int i = 1; i < data.Length; i += 4)
-                {
-                    data[i] = (byte)(-data[i] & 0xff);
-                }
-                for (int i = 0; i < data.Length; i += 3)
-                {
-                    data[i] ^= keyTable[i / 5 % 5 + i % 6];
-                }
-                NibbleSwap (data, 2, 6);
+                data[i] = (byte)(-data[i] & 0xff);
             }
+            for (int i = 0; i < data.Length; i += 3)
+            {
+                data[i] ^= keyTable[i / 5 % 5 + i % 6];
+            }
+            NibbleSwap(data, 2, 6);
             return new BinMemoryStream (data);
         }
 

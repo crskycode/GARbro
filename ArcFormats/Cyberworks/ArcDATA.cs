@@ -74,15 +74,12 @@ namespace GameRes.Formats.Cyberworks
         {
             var arc_name = Path.GetFileName(file.Name);
             var dir_name = VFS.GetDirectoryName(file.Name);
-            var toc_arc_name = VFS.CombinePath(dir_name, "Data00.dat");
-            if (!VFS.FileExists(toc_arc_name))
-               return null;
             if ("Data00.dat".Equals(arc_name, StringComparison.OrdinalIgnoreCase)) 
                 return null;
             if (!int.TryParse(arc_name.Substring(4, arc_name.IndexOf('.') - 4), out int arc_index))
                 return null;
             var scheme = QueryScheme(arc_name);
-            var dir = ScanDir(toc_arc_name, arc_index, scheme);
+            var dir = ScanDir(VFS.CombinePath(dir_name, "Data00.dat"), arc_index, scheme);
             if (null == dir || 0 == dir.Count)
                 return null;
 
@@ -154,6 +151,9 @@ namespace GameRes.Formats.Cyberworks
 
         List<Entry> ScanDir(string toc_arc_name, int arc_index, DataScheme scheme) 
         {
+            if(!VFS.FileExists(toc_arc_name))
+               return null;
+
             var dir = new List<Entry>();
             var toc_offset = 0;
 

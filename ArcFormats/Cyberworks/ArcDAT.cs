@@ -220,22 +220,12 @@ namespace GameRes.Formats.Cyberworks
             var toc = ReadToc (toc_name, 8);
             if (null == toc)
                 return null;
-            using (var index = GetIndexReader (toc, file, arc_idx, game_name))
+            using (var index = new ArcIndexReader (toc, file, arc_idx, game_name))
             {
                 if (!index.Read())
                     return null;
                 return ArchiveFromDir (file, index.Dir, index.HasImages);
             }
-        }
-
-        internal virtual IndexReader GetIndexReader (byte[] toc, ArcView file, int arc_idx, string game_name)
-        {
-            return new ArcIndexReader (toc, file, arc_idx, game_name);
-        }
-
-        internal virtual TocUnpacker GetTocUnpacker (string toc_name)
-        {
-            return new TocUnpacker (toc_name);
         }
 
         internal ArcFile ArchiveFromDir (ArcView file, List<Entry> dir, bool has_images)
@@ -255,7 +245,7 @@ namespace GameRes.Formats.Cyberworks
         {
             if (!VFS.FileExists (meta_arc_name))
                 return null;
-            using (var unpacker = GetTocUnpacker (meta_arc_name))
+            using (var unpacker = new TocUnpacker (meta_arc_name))
             {
                 if (unpacker.Length > 0x1000)
                     return null;
@@ -279,7 +269,7 @@ namespace GameRes.Formats.Cyberworks
         {
             if (!VFS.FileExists (toc_name))
                 return null;
-            using (var toc_unpacker = GetTocUnpacker (toc_name))
+            using (var toc_unpacker = new TocUnpacker (toc_name))
                 return toc_unpacker.Unpack (num_length);
         }
 
@@ -414,26 +404,6 @@ namespace GameRes.Formats.Cyberworks
     }
 
     [Export(typeof(ArchiveFormat))]
-    public class DatOpener2024 : DatOpener
-    {
-        public override string         Tag { get { return "ARC/Cyberworks/2"; } }
-        public override string Description { get { return "Cyberworks/TinkerBell resource archive"; } }
-        public override uint     Signature { get { return 0; } }
-        public override bool  IsHierarchic { get { return false; } }
-        public override bool      CanWrite { get { return false; } }
-
-        internal override IndexReader GetIndexReader (byte[] toc, ArcView file, int arc_idx, string game_name)
-        {
-            return new ArcIndexReader2 (toc, file, arc_idx, game_name);
-        }
-
-        internal override TocUnpacker GetTocUnpacker (string toc_name)
-        {
-            return new TocUnpacker (toc_name, true);
-        }
-    }
-
-    [Export(typeof(ArchiveFormat))]
     public class OldDatOpener : DatOpener
     {
         public override string         Tag { get { return "ARC/Csystem"; } }
@@ -544,22 +514,19 @@ namespace GameRes.Formats.Cyberworks
     {
         ArcView   m_file;
         bool      m_should_dispose;
-        bool      m_reversed_decimal;
 
         public long       Length { get { return m_file.MaxOffset; } }
         public uint   PackedSize { get; private set; }
         public uint UnpackedSize { get; private set; }
 
-        public TocUnpacker (string toc_name, bool reversed_decimal = false)
-            : this (VFS.OpenView (toc_name), true, reversed_decimal)
+        public TocUnpacker (string toc_name) : this (VFS.OpenView (toc_name), true)
         {
         }
 
-        public TocUnpacker (ArcView file, bool should_dispose = false, bool reversed_decimal = false)
+        public TocUnpacker (ArcView file, bool should_dispose = false)
         {
             m_file = file;
             m_should_dispose = should_dispose;
-            m_reversed_decimal = reversed_decimal;
         }
 
         public byte[] Unpack (int num_length)
@@ -597,22 +564,7 @@ namespace GameRes.Formats.Cyberworks
         {
             uint v = 0;
             uint rank = 1;
-
-            int start, end, step;
-            if (m_reversed_decimal)
-            {
-                start = 0;
-                end = num_length;
-                step = 1;
-            }
-            else
-            {
-                start = num_length-1;
-                end = -1;
-                step = -1;
-            }
-
-            for (int i = start; i != end; i += step, rank *= 10)
+            for (int i = num_length-1; i >= 0; --i, rank *= 10)
             {
                 uint b = m_file.View.ReadByte (offset+i);
                 if (b != 0xFF)
@@ -675,9 +627,9 @@ namespace GameRes.Formats.Cyberworks
             return true;
         }
 
-        protected uint m_fault_id = 100000;
+        uint m_fault_id = 100000;
 
-        internal virtual PackedEntry ReadEntryInfo ()
+        internal PackedEntry ReadEntryInfo ()
         {
             uint id = m_index.ReadUInt32();
             if (id > m_fault_id)
@@ -752,27 +704,6 @@ namespace GameRes.Formats.Cyberworks
                 entry.Name = Path.ChangeExtension (entry.Name, ext);
             }
             return true;
-        }
-    }
-
-    internal class ArcIndexReader2 : ArcIndexReader
-    {
-        public ArcIndexReader2 (byte[] toc, ArcView file, int arc_number, string game_name = null)
-            : base (toc, file, arc_number, game_name)
-        {
-        }
-
-        internal override PackedEntry ReadEntryInfo ()
-        {
-            uint id = m_index.ReadUInt32();
-            if (id > m_fault_id)
-                id = m_fault_id++;
-            var entry = new PackedEntry { Name = id.ToString ("D6") };
-            entry.UnpackedSize = m_index.ReadUInt32();
-            entry.Offset = m_index.ReadUInt32();
-            entry.Size = m_index.ReadUInt32();
-            entry.IsPacked = entry.UnpackedSize != entry.Size && entry.UnpackedSize != 0;
-            return entry;
         }
     }
 

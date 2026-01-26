@@ -161,6 +161,7 @@
     <Compile Include="Ism\ImagePNG.cs" />
     <Compile Include="Kid\ArcDATRAW.cs" />
     <Compile Include="Kid\ArcKLZ.cs" />
+    <Compile Include="Kid\ArcP2T.cs" />
     <Compile Include="Kid\ImageBIP.cs" />
     <Compile Include="Kid\ImageBIParc.cs" />
     <Compile Include="Kid\ImageKLZ.cs" />
@@ -212,12 +213,14 @@
     <Compile Include="MAGES\ArcGTF.cs" />
     <Compile Include="MAGES\ArcLoveOnce.cs" />
     <Compile Include="MAGES\ImageBIN.cs" />
+	<Compile Include="Musica\ArcMIP.cs" />
     <Compile Include="Mugi\ArcBIN.cs" />
     <Compile Include="Musica\ArcPAK.cs" />
     <Compile Include="NipponIchi\ArcCASN.cs" />
     <Compile Include="NipponIchi\ArcPSFS.cs" />
     <Compile Include="NipponIchi\ImageNMT.cs" />
     <Compile Include="NScripter\Script.cs" />
+    <Compile Include="Ps1\ImageTIM.cs" />
     <Compile Include="Psp\ArcQPK.cs" />
     <Compile Include="ScrPlayer\ImageIMG.cs" />
     <Compile Include="SingleFileArchive.cs" />
@@ -607,7 +610,6 @@
     <Compile Include="MD5.cs" />
     <Compile Include="Moonhir\ArcFPK.cs" />
     <Compile Include="Morning\ArcTTD.cs" />
-    <Compile Include="Musica\ArcMIP.cs" />
     <Compile Include="Musica\ArcPAZ.cs" />
     <Compile Include="Musica\ArcSQZ.cs" />
     <Compile Include="Musica\WidgetPAZ.xaml.cs">
