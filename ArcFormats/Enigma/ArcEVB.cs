@@ -48,6 +48,7 @@ namespace GameRes.Formats.Enigma {
 
         public EvbPackOpener() {
             Signatures = new uint[] { 0x425645, 0x905a4d, 0 };
+            Extensions = new[] { "exe" };
         }
 
         public override ArcFile TryOpen(ArcView file) {
