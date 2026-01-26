@@ -11,22 +11,22 @@ namespace GameRes.Formats.Leaf
     {
         public override string         Tag { get { return "VIDEO/LEAF"; } }
         public override string Description { get { return "Leaf/Aquaplus Video Container"; } }
-        public override uint     Signature { get { return 0; } } // Verificação dinâmica
+        public override uint     Signature { get { return 0; } } // Dynamic verification
         public override bool  IsHierarchic { get { return false; } }
         public override bool      CanWrite { get { return false; } }
 
         public override ArcFile TryOpen(ArcView file)
         {
-            // Lê os primeiros 16 bytes para verificar a assinatura
+            // Read the first 16 bytes to check the signature
             if (file.MaxOffset < 16)
                 return null;
 
             string ext = null;
             uint head = file.View.ReadUInt32(0);
 
-            // 1. Verifica se é WMV/ASF (Padrão da Leaf)
+            // 1. Check if it is WMV/ASF (Leaf standard)
             // GUID: 30 26 B2 75 8E 66 CF 11 ...
-            // Em Little Endian UInt64: 0x11CF668E75B22630
+            // In Little Endian UInt64: 0x11CF668E75B22630
             if (head == 0x75B22630)
             {
                 ulong asfGuid = file.View.ReadUInt64(0);
@@ -35,16 +35,16 @@ namespace GameRes.Formats.Leaf
                     ext = ".wmv";
                 }
             }
-            // 2. Verifica se é AVI (RIFF ... AVI )
+            // 2. Check if it is AVI (RIFF ... AVI )
             else if (head == 0x46464952) // "RIFF"
             {
-                // Verifica se o tipo no offset 8 é "AVI "
+                // Check if the type at offset 8 is "AVI "
                 if (file.View.ReadUInt32(8) == 0x20495641) 
                 {
                     ext = ".avi";
                 }
             }
-            // 3. Verifica se é MPEG (Reaproveitando lógica, caso algum jogo antigo use)
+            // 3. Check if it is MPEG (Reusing logic, in case an old game uses it)
             else if (head == 0xBA010000)
             {
                 ext = ".mpg";
@@ -53,7 +53,7 @@ namespace GameRes.Formats.Leaf
             if (ext == null)
                 return null;
 
-            // Cria a entrada virtual com a extensão correta
+            // Create the virtual entry with the correct extension
             var entry = new Entry
             {
                 Name = Path.GetFileNameWithoutExtension(file.Name) + ext,
