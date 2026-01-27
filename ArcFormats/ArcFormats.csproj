@@ -161,6 +161,7 @@
     <Compile Include="FC01\BdtTables.cs" />
     <Compile Include="Fog\ArcDAT.cs" />
     <Compile Include="GScripter\ArcDATA.cs" />
+    <Compile Include="Guyzware\ArcDat.cs" />
     <Compile Include="Ism\ImagePNG.cs" />
     <Compile Include="Kid\ArcDATRAW.cs" />
     <Compile Include="Kid\ArcKLZ.cs" />
@@ -225,6 +226,7 @@
     <Compile Include="NipponIchi\ImageNMT.cs" />
     <Compile Include="NScripter\Script.cs" />
     <Compile Include="Ps1\ImageTIM.cs" />
+    <Compile Include="Psp\ArcGim.cs" />
     <Compile Include="Psp\ArcQPK.cs" />
     <Compile Include="ScrPlayer\ImageIMG.cs" />
     <Compile Include="SingleFileArchive.cs" />
