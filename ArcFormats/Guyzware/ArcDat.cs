@@ -10,7 +10,7 @@ namespace GameRes.Formats.Guyzware
     public class GdpOpener : ArchiveFormat
     {
         public override string Tag => "DAT/GDP";
-        public override string Description => "Guyzware engine"
+        public override string Description => "Guyzware engine";
         public override uint Signature => 0;
         public override bool IsHierarchic => false;
         public override bool CanWrite => false;
