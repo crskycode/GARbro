@@ -221,6 +221,7 @@
     <Compile Include="MAGES\ImageBIN.cs" />
     <Compile Include="Mugi\ArcBIN.cs" />
     <Compile Include="Musica\ArcPAK.cs" />
+    <Compile Include="NEKOWORKs\ArcPACK.cs" />
     <Compile Include="NipponIchi\ArcCASN.cs" />
     <Compile Include="NipponIchi\ArcPSFS.cs" />
     <Compile Include="NipponIchi\ImageNMT.cs" />
