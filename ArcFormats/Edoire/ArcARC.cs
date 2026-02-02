@@ -49,7 +49,7 @@ namespace GameRes.Formats.Edoire
             if (!file.View.AsciiEqual (0, "@ARCH000"))
                 return null;
             var index_offset = file.View.ReadInt64 (file.MaxOffset-8);
-            if (index_offset >= file.MaxOffset-12)
+            if (index_offset <= 0 || index_offset >= file.MaxOffset-12)
                 return null;
             var count = file.View.ReadInt32 (index_offset);
             if (!IsSaneCount (count))
