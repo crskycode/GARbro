@@ -1209,6 +1209,7 @@ namespace GameRes.Formats.Rugp
         public CObject      field_14;
         public CObject      field_18;
         public CObject      field_1C;
+        public CObject      field_20;
         public CObject      field_24;
         public CObject      field_28;
         public CObject      field_2C;
@@ -1243,7 +1244,9 @@ namespace GameRes.Formats.Rugp
         void ReadRelic (CRioArchive arc)
         {
             Version = arc.ReadInt32();
-            if (Version >= 0x24)
+            if (Version == CRioArchive.ObjectSignature)
+                return; // Kimi ga Ita Kisetsu ~Primary~ doesn't have these fields
+            else if (Version >= 0x24)
             {
                 field_24 = arc.ReadRioReference ("CDatabaseBase"); // UnivUI
                 field_28 = arc.ReadRioReference ("CDatabaseBase");
