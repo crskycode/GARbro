@@ -162,6 +162,7 @@
     <Compile Include="FC01\ArcSCXA.cs" />
     <Compile Include="FC01\BdtTables.cs" />
     <Compile Include="Fog\ArcDAT.cs" />
+    <Compile Include="FrontierWorks\ImageEXT.cs" />
     <Compile Include="GScripter\ArcDATA.cs" />
     <Compile Include="Guyzware\ArcDat.cs" />
     <Compile Include="Ism\ImagePNG.cs" />
