@@ -141,6 +141,7 @@
     <Compile Include="AIRNovel\ArcAIR.cs" />
     <Compile Include="aNCHOR\ArcFPD.cs" />
     <Compile Include="aNCHOR\AudioFCD.cs" />
+    <Compile Include="FrontierWorks\ArcPCARC.cs" />
     <Compile Include="Artemis\ImageNekoPNG.cs" />
     <Compile Include="CsWare\AudioWAV.cs" />
     <Compile Include="CsWare\ImageGDT.cs" />
