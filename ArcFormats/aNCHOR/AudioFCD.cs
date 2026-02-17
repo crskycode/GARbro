@@ -27,6 +27,8 @@ using System;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
+using GameRes.Cryptography;
+using GameRes.Utility;
 
 namespace GameRes.Formats.Anchor
 {
@@ -45,11 +47,57 @@ namespace GameRes.Formats.Anchor
         public override SoundInput TryOpen (IBinaryStream file)
         {
             file.Position = 4;
-            // guess: big endian, version=2, type=0 (ogg), offset=0xC
-            byte[] data = { 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x4F, 0x67, 0x67, 0x53 };
-            if (!file.ReadBytes (0x0C).SequenceEqual (data))
-                throw new NotSupportedException();
-            return new OggInput (new StreamRegion (file.AsStream, 0x0C));
+
+            uint version = Binary.BigEndian (file.ReadUInt16());
+            if (version != 2)
+                return null;
+
+            uint count = Binary.BigEndian (file.ReadUInt16());
+            uint offset = Binary.BigEndian (file.ReadUInt32());
+            Stream region = new StreamRegion (file.AsStream, offset);
+
+            if (count == 0 && offset == 0x0C)
+                return new OggInput (region);
+
+            if (count == 1 && offset == 0x1C)
+            {
+                file.Position = 0x0C;
+                uint type = Binary.BigEndian (file.ReadUInt32());
+                if (type != 2)
+                    return null;
+
+                var md5 = new MD5();
+                md5.Initialize();
+                md5.Update (file.ReadBytes (0xC), 0, 0xC);
+                md5.Update (DefaultScheme.Md5Addition, 0, 0x4000);
+                md5.Final();
+
+                var key = new byte[16];
+                Buffer.BlockCopy (md5.State, 0, key, 0, 16);
+                var encryption = new Mk2Blowfish (key, DefaultScheme.Context);
+                var stream = new InputCryptoStream (region, encryption.CreateDecryptor());
+                var mem = new MemoryStream();
+                stream.CopyTo (mem);
+                mem.Position = 0;
+                return new OggInput (mem);
+            }
+
+            return null;
         }
+
+        FcdScheme DefaultScheme = new FcdScheme();
+
+        public override ResourceScheme Scheme
+        {
+            get { return DefaultScheme; }
+            set { DefaultScheme = (FcdScheme)value; }
+        }
+    }
+
+    [Serializable]
+    public class FcdScheme : ResourceScheme
+    {
+        public byte[] Context;
+        public byte[] Md5Addition;
     }
 }
