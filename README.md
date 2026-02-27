@@ -7,7 +7,7 @@ Requires .NET Framework v4.6 or newer (https://www.microsoft.com/net)
 
 [Supported formats](https://morkt.github.io/GARbro/supported.html)
 
-[Download latest release](https://github.com/morkt/GARbro/releases)
+[Download latest release](https://github.com/crskycode/GARbro/releases)
 
 Operation
 ---------
