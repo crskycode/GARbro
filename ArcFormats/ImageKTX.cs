@@ -1,6 +1,6 @@
-﻿//! \file       ImagePIC.cs
-//! \date       2017 Dec 04
-//! \brief      Soft House Sprite modified bitmap image.
+﻿//! \file       ImageKTX.cs
+//! \date       2026 March 01
+//! \brief      Khronos texture format.
 //
 // Copyright (C) 2017 by morkt
 //
