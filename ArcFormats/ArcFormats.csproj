@@ -126,8 +126,8 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
-    <Reference Include="ZstdNet, Version=1.5.7.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ZstdNet.1.5.7\lib\netstandard2.0\ZstdNet.dll</HintPath>
+    <Reference Include="ZstdSharp, Version=0.8.7.0, Culture=neutral, PublicKeyToken=8d151af33a4ad5cf, processorArchitecture=MSIL">
+      <HintPath>..\packages\ZstdSharp.Port.0.8.7\lib\net462\ZstdSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -1391,12 +1391,10 @@ exit 0</PreBuildEvent>
     <PostBuildEvent>if not exist "$(TargetDir)\GameData" mkdir "$(TargetDir)\GameData"
 xcopy "$(ProjectDir)\Resources\*" "$(TargetDir)\GameData\" /D /Y &gt;NUL</PostBuildEvent>
   </PropertyGroup>
-  <Import Project="..\packages\ZstdNet.1.5.7\build\ZstdNet.targets" Condition="Exists('..\packages\ZstdNet.1.5.7\build\ZstdNet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\ZstdNet.1.5.7\build\ZstdNet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ZstdNet.1.5.7\build\ZstdNet.targets'))" />
     <Error Condition="!Exists('..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets'))" />
   </Target>
   <Import Project="..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets')" />

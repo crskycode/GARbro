@@ -313,7 +313,7 @@ namespace GameRes.Formats.NeXAS
 
         static private byte[] ZstdDecompress (Stream s, uint unpackedSize)
         {
-            using (var ds = new ZstdNet.DecompressionStream (s))
+            using (var ds = new ZstdSharp.DecompressionStream (s))
             {
                 var dst = new byte[unpackedSize];
                 ds.Read (dst, 0, dst.Length);
