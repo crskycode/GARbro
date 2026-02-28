@@ -15,7 +15,7 @@ jobs:
         run: nuget restore
       # Build the solution
       - name: Build
-        run: msbuild /p:Configuration=Release /p:Platform="Any CPU" /p:TargetFrameworkVersion=v4.6.2 GARbro.sln
+        run: msbuild /p:Configuration=Release /p:Platform="Any CPU" GARbro.sln
       # Publish the artifacts
       - name: Publish Artifact
         if: success()
