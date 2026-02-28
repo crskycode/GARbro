@@ -849,5 +849,17 @@ namespace GameRes.Formats.Properties {
                 this["TIM2AlphaFormat"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string BELLDATATitle {
+            get {
+                return ((string)(this["BELLDATATitle"]));
+            }
+            set {
+                this["BELLDATATitle"] = value;
+            }
+        }
     }
 }
