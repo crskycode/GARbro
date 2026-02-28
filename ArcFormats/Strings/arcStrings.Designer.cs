@@ -754,14 +754,14 @@ namespace GameRes.Formats.Strings {
         
         /// <summary>
         ///   Looks up a localized string similar to Choose Tim2 image alpha format.
-        ///   It can&apos;t be read correctly from the file.
+        ///It can&apos;t be read correctly from the file..
         /// </summary>
         public static string Tim2AlphaFormat {
             get {
                 return ResourceManager.GetString("Tim2AlphaFormat", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Hex number.
         /// </summary>
