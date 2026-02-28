@@ -49,8 +49,8 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Concentus, Version=2.2.1.0, Culture=neutral, PublicKeyToken=2f7fb9b49ffdfe20, processorArchitecture=MSIL">
-      <HintPath>..\packages\Concentus.2.2.1\lib\net452\Concentus.dll</HintPath>
+    <Reference Include="Concentus, Version=2.2.2.0, Culture=neutral, PublicKeyToken=2f7fb9b49ffdfe20, processorArchitecture=MSIL">
+      <HintPath>..\packages\Concentus.2.2.2\lib\net452\Concentus.dll</HintPath>
     </Reference>
     <Reference Include="Concentus.Oggfile, Version=1.0.6.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Concentus.Oggfile.1.0.6\lib\net452\Concentus.Oggfile.dll</HintPath>
