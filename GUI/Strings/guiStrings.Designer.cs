@@ -790,7 +790,7 @@ namespace GARbro.GUI.Strings {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Image {0} x {1} x {2}bpp.
+        ///   Looks up a localized string similar to Image {0} x {1} x {2}bpp [{3}].
         /// </summary>
         public static string MsgImageSize {
             get {
@@ -1211,6 +1211,15 @@ namespace GARbro.GUI.Strings {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to OK.
+        /// </summary>
+        public static string TextOK {
+            get {
+                return ResourceManager.GetString("TextOK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Archive parameters.
         /// </summary>
         public static string TextParametersTitle {
@@ -1319,6 +1328,24 @@ namespace GARbro.GUI.Strings {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Archive.
+        /// </summary>
+        public static string Type_archive {
+            get {
+                return ResourceManager.GetString("Type_archive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Audio.
+        /// </summary>
+        public static string Type_audio {
+            get {
+                return ResourceManager.GetString("Type_audio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &lt;DIR&gt;.
         /// </summary>
         public static string Type_directory {
@@ -1328,11 +1355,38 @@ namespace GARbro.GUI.Strings {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to none.
+        ///   Looks up a localized string similar to Image.
+        /// </summary>
+        public static string Type_image {
+            get {
+                return ResourceManager.GetString("Type_image", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to NONE.
         /// </summary>
         public static string Type_NONE {
             get {
                 return ResourceManager.GetString("Type_NONE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Script.
+        /// </summary>
+        public static string Type_script {
+            get {
+                return ResourceManager.GetString("Type_script", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Video.
+        /// </summary>
+        public static string Type_video {
+            get {
+                return ResourceManager.GetString("Type_video", resourceCulture);
             }
         }
         
