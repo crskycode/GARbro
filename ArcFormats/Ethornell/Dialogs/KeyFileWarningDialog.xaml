@@ -1,0 +1,35 @@
+<Window x:Class="GameRes.Formats.Ethornell.KeyFileWarningDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="BGI Key File Saved" 
+        ShowInTaskbar="False" 
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize" 
+        SizeToContent="WidthAndHeight" 
+        ShowActivated="True"
+        FocusManager.FocusedElement="{Binding ElementName=OkButton}"
+        Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Height="158">
+    <StackPanel Orientation="Horizontal" Width="419" Height="167">
+        <Image Source="info.png" Width="64" Height="64" Margin="10"
+       SnapsToDevicePixels="True" VerticalAlignment="Top" RenderOptions.BitmapScalingMode="HighQuality"/>
+        <StackPanel Orientation="Vertical" Height="137">
+            <TextBlock FontSize="11.5" Text="The file 'bgi_keys.dat' has been saved with the extracted files." 
+                       />
+            <TextBlock FontSize="11.5" Text="You need this file when repacking the archive to compress them." 
+                       Margin="0,10,10,10"/>
+            <Separator/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button x:Name="OkButton" 
+                        Content="OK" 
+                        Margin="0,10,10,10" 
+                        MinWidth="75" 
+                        Height="25" 
+                        IsDefault="True" 
+                        Click="OkButton_Click"/>
+            </StackPanel>
+            <CheckBox x:Name="DontShowAgain" 
+                      Content="Don't show this warning again" 
+                      />
+        </StackPanel>
+    </StackPanel>
+</Window>

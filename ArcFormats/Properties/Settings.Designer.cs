@@ -25,6 +25,42 @@ namespace GameRes.Formats.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public int BGIArchiveVersion {
+            get {
+                return ((int)(this["BGIArchiveVersion"]));
+            }
+            set {
+                this["BGIArchiveVersion"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool BGICompressFiles {
+            get {
+                return ((bool)(this["BGICompressFiles"]));
+            }
+            set {
+                this["BGICompressFiles"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string BGIKeyFilePath {
+            get {
+                return ((string)(this["BGIKeyFilePath"]));
+            }
+            set {
+                this["BGIKeyFilePath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string NPAScheme {
             get {
