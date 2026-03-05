@@ -1,0 +1,40 @@
+<Window x:Class="GameRes.Formats.Ethornell.MissingKeyFileDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="BGI Keys Not Found" 
+        ShowInTaskbar="False" 
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize" 
+        SizeToContent="WidthAndHeight" 
+        ShowActivated="True"
+        FocusManager.FocusedElement="{Binding ElementName=UncompressedButton}"
+        Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+    <StackPanel Orientation="Horizontal">
+        <Image Source="actions.png" Width="64" Height="64" Margin="10"
+            SnapsToDevicePixels="True" VerticalAlignment="Top" RenderOptions.BitmapScalingMode="HighQuality"/>
+        <StackPanel Orientation="Vertical" Width="353">
+            <TextBlock Text="The file 'bgi_keys.dat' was not found in the source directory." 
+                       Margin="0,10,0,0"/>
+            <TextBlock Text="You can't compress the DSC files without encryption keys." 
+                       Margin="0,10,10,10"/>
+            <TextBlock Text="What would you like to do?" 
+                       Margin="0,0,10,10"/>
+            <Separator/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button x:Name="UncompressedButton" 
+                        Content="Pack All Uncompressed" 
+                        Margin="0,10,10,10" 
+                        MinWidth="130" 
+                        Height="25" 
+                        IsDefault="True" 
+                        Click="PackUncompressed_Click"/>
+                <Button Content="Cancel" 
+                        Margin="10" 
+                        MinWidth="75" 
+                        Height="25" 
+                        IsCancel="True" 
+                        Click="Cancel_Click"/>
+            </StackPanel>
+        </StackPanel>
+    </StackPanel>
+</Window>
