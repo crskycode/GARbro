@@ -2,6 +2,15 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="GameRes.Formats.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
+    <Setting Name="BGIArchiveVersion" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="BGICompressFiles" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="BGIKeyFilePath" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
     <Setting Name="NPAScheme" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>

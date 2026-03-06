@@ -415,6 +415,26 @@ namespace GARbro.GUI
 
         void OnExtractComplete (object sender, RunWorkerCompletedEventArgs e)
         {
+            // Call format-specific cleanup (for BGI, save the keys)
+            string tag = m_fs.Source.Tag;            
+            if (tag == "BGI" || tag == "BURIKO ARC")
+            {
+                try
+                {
+                    string destination = Directory.GetCurrentDirectory();
+                    // Use reflection to call OnExtractionComplete if the method exists
+                    var format = m_fs.Source.Format;
+                    var method = format.GetType().GetMethod("OnExtractionComplete");
+                    if (method != null)
+                    {
+                        method.Invoke(format, new object[] { destination });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Trace.WriteLine($"OnExtractionComplete failed: {ex.Message}", "GarExtract");
+                }
+            }
             m_main.IsEnabled = true;
             m_extract_in_progress = false;
             m_progress_dialog.Dispose();

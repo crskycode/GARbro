@@ -1074,6 +1074,21 @@
     <Compile Include="YuRis\CreateYPFWidget.xaml.cs">
       <DependentUpon>CreateYPFWidget.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Ethornell\CreateBGIWidget.xaml.cs">
+      <DependentUpon>CreateBGIWidget.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Ethornell\Dialogs\KeyConflictDialog.xaml.cs">
+      <DependentUpon>KeyConflictDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Ethornell\Dialogs\KeyFileWarningDialog.xaml.cs">
+      <DependentUpon>KeyFileWarningDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Ethornell\Dialogs\MissingKeyDialog.xaml.cs">
+      <DependentUpon>MissingKeyDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Ethornell\Dialogs\MissingKeyFileDialog.xaml.cs">
+      <DependentUpon>MissingKeyFileDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="FC01\ImageACD.cs" />
     <Compile Include="Masys\ImageAG.cs" />
     <Compile Include="AnimeGameSystem\ImageAinos.cs" />
@@ -1242,6 +1257,26 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Ethornell\CreateBGIWidget.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Ethornell\Dialogs\KeyConflictDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Ethornell\Dialogs\KeyFileWarningDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Ethornell\Dialogs\MissingKeyDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Ethornell\Dialogs\MissingKeyFileDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ExHibit\WidgetGYU.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -1395,7 +1430,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Strings\arcStrings.ru-RU.resx" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="Ethornell\Dialogs\info.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Ethornell\Dialogs\actions.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>perl "$(SolutionDir)inc-revision.pl" "$(ProjectPath)" $(ConfigurationName)
