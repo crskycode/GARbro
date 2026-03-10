@@ -3,7 +3,7 @@
 //! \brief      KiriKiri TLG image implementation.
 //---------------------------------------------------------------------------
 // TLG5/6 decoder
-//	Copyright (C) 2000-2005  W.Dee <dee@kikyou.info> and contributors
+//  Copyright (C) 2000-2005  W.Dee <dee@kikyou.info> and contributors
 //
 // C# port by morkt
 //
@@ -23,6 +23,21 @@ namespace GameRes.Formats.KiriKiri
     {
         public int Version;
         public int DataOffset;
+
+        // TLGref / TLGqoi additions
+        public bool IsTlgRef;
+        public bool IsTlgQoi;
+        public uint RefId;
+        public int ImageIndex;
+        public int ImageCount;
+        public string HiddenName;
+        public int BandHeight;
+        public int BandCount;
+        public ulong Q0;
+        public ulong Q1;
+        public ulong Q2;
+        public ulong Q3;
+        public int PayloadOffset;
     }
 
     [Export(typeof(ImageFormat))]
@@ -35,13 +50,25 @@ namespace GameRes.Formats.KiriKiri
         public TlgFormat ()
         {
             Extensions = new string[] { "tlg", "tlg5", "tlg6" };
-            Signatures = new uint[] { 0x30474C54, 0x35474C54, 0x36474C54, 0x35474CAB, 0x584D4B4A };
+            Signatures = new uint[] {
+                0x30474C54, 0x35474C54, 0x36474C54, 0x35474CAB, 0x584D4B4A,
+                0x71474C54, // "TLGq"
+                0x72474C54, // "TLGr"
+            };
         }
 
         public override ImageMetaData ReadMetaData (IBinaryStream stream)
         {
-            var header = stream.ReadHeader (0x26);
-            int offset = 0xf;
+            var header = stream.ReadHeader (0x54);
+            if (header.Length < 0x1C)
+                return null;
+
+            if (header.AsciiEqual ("TLGref\x00raw\x1a"))
+                return ReadTlgRefMetaData (header);
+            if (header.AsciiEqual ("TLGqoi\x00raw\x1a"))
+                return ReadTlgQoiMetaData (header);
+
+            int offset = 0x0F;
             if (!header.AsciiEqual ("TLG0.0\x00sds\x1a"))
                 offset = 0;
             int version;
@@ -98,9 +125,85 @@ namespace GameRes.Formats.KiriKiri
             };
         }
 
+        TlgMetaData ReadTlgRefMetaData (CowArray<byte> header)
+        {
+            if (header.Length < 0x2C)
+                return null;
+            if (!header.AsciiEqual (20, "QREF"))
+                return null;
+
+            int chunk_size = LittleEndian.ToInt32 (header, 24);
+            if (chunk_size < 16)
+                return null;
+
+            int name_bytes = LittleEndian.ToInt32 (header, 40);
+            if (name_bytes < 0)
+                return null;
+
+            string hidden_name = string.Empty;
+            if (name_bytes != 0 && header.Length >= 44 + name_bytes)
+            {
+                var name_buf = new byte[name_bytes];
+                for (int i = 0; i < name_bytes; ++i)
+                    name_buf[i] = header[44 + i];
+                hidden_name = Encoding.Unicode.GetString(name_buf);
+            }
+
+            return new TlgMetaData
+            {
+                Width       = LittleEndian.ToUInt32 (header, 12),
+                Height      = LittleEndian.ToUInt32 (header, 16),
+                BPP         = 32,
+                Version     = 0,
+                DataOffset  = 0,
+                IsTlgRef    = true,
+                RefId       = LittleEndian.ToUInt32 (header, 28),
+                ImageIndex  = LittleEndian.ToInt32 (header, 32),
+                ImageCount  = LittleEndian.ToInt32 (header, 36),
+                HiddenName  = hidden_name,
+            };
+        }
+
+        TlgMetaData ReadTlgQoiMetaData (CowArray<byte> header)
+        {
+            if (header.Length < 0x54)
+                return null;
+            if (!header.AsciiEqual (20, "QHDR"))
+                return null;
+
+            int chunk_size = LittleEndian.ToInt32 (header, 24);
+            if (chunk_size != 0x30)
+                return null;
+
+            return new TlgMetaData
+            {
+                Width       = LittleEndian.ToUInt32 (header, 12),
+                Height      = LittleEndian.ToUInt32 (header, 16),
+                BPP         = 32,
+                Version     = 0,
+                DataOffset  = 0,
+                IsTlgQoi    = true,
+                RefId       = LittleEndian.ToUInt32 (header, 28),
+                BandHeight  = LittleEndian.ToInt32 (header, 36),
+                BandCount   = LittleEndian.ToInt32 (header, 40),
+                Q0          = LittleEndian.ToUInt64 (header, 44),
+                Q1          = LittleEndian.ToUInt64 (header, 52),
+                Q2          = LittleEndian.ToUInt64 (header, 60),
+                Q3          = LittleEndian.ToUInt64 (header, 68),
+                PayloadOffset = 0x54,
+                ImageIndex  = 0,
+                ImageCount  = 1,
+            };
+        }
+
         public override ImageData Read (IBinaryStream file, ImageMetaData info)
         {
             var meta = (TlgMetaData)info;
+
+            if (meta.IsTlgRef)
+                return ReadTlgRef (file, meta);
+            if (meta.IsTlgQoi)
+                return ReadTlgQoiImage (file, meta, meta.ImageIndex, meta.ImageCount);
 
             var image = ReadTlg (file, meta);
 
@@ -127,6 +230,48 @@ namespace GameRes.Formats.KiriKiri
             return ImageData.Create (meta, format, null, image, (int)meta.Width * 4);
         }
 
+        ImageData ReadTlgRef (IBinaryStream file, TlgMetaData meta)
+        {
+            if (string.IsNullOrEmpty (meta.HiddenName))
+                throw new InvalidFormatException ("TLGref hidden file name is empty");
+
+            string hidden_name = VFS.CombinePath (VFS.GetDirectoryName (meta.FileName), meta.HiddenName);
+            using (var hidden = VFS.OpenBinaryStream (hidden_name))
+            {
+                var hidden_info = ReadMetaData (hidden) as TlgMetaData;
+                if (null == hidden_info || !hidden_info.IsTlgQoi)
+                    throw new InvalidFormatException ("Referenced file is not TLGqoi");
+
+                hidden_info.FileName = hidden_name;
+                if (hidden_info.RefId != meta.RefId)
+                    throw new InvalidFormatException ("TLGref/TLGqoi ref_id mismatch");
+
+                var pixels = ReadTlgQoi (hidden, hidden_info, meta.ImageIndex, meta.ImageCount);
+
+                var image_meta = new TlgMetaData
+                {
+                    Width   = meta.Width != 0 ? meta.Width : hidden_info.Width,
+                    Height  = meta.Height != 0 ? meta.Height : hidden_info.Height,
+                    BPP     = 32,
+                    FileName = meta.FileName,
+                };
+                return ImageData.Create (image_meta, PixelFormats.Bgra32, null, pixels, (int)image_meta.Width * 4);
+            }
+        }
+
+        ImageData ReadTlgQoiImage (IBinaryStream file, TlgMetaData meta, int image_index, int image_count)
+        {
+            var pixels = ReadTlgQoi (file, meta, image_index, image_count);
+            var image_meta = new TlgMetaData
+            {
+                Width    = meta.Width,
+                Height   = meta.Height,
+                BPP      = 32,
+                FileName = meta.FileName,
+            };
+            return ImageData.Create (image_meta, PixelFormats.Bgra32, null, pixels, (int)meta.Width * 4);
+        }
+
         public override void Write (Stream file, ImageData image)
         {
             throw new NotImplementedException ("TlgFormat.Write not implemented");
@@ -139,6 +284,133 @@ namespace GameRes.Formats.KiriKiri
                 return ReadV6 (src, info);
             else
                 return ReadV5 (src, info);
+        }
+
+        byte[] ReadTlgQoi (IBinaryStream src, TlgMetaData info, int image_index, int image_count)
+        {
+            src.Position = 0;
+            var data = src.ReadBytes ((int)src.Length);
+            if (null == data || data.Length < info.PayloadOffset)
+                throw new InvalidFormatException ("Truncated TLGqoi file");
+
+            if (image_count <= 0 || image_index < 0 || image_index >= image_count)
+                throw new InvalidFormatException ("Invalid TLGqoi image selector");
+
+            if (info.Q1 > info.Q2 || info.Q2 > info.Q3)
+                throw new InvalidFormatException ("Invalid TLGqoi segment offsets");
+
+            long payload = info.PayloadOffset;
+            long q1 = (long)info.Q1;
+            long q2 = (long)info.Q2;
+            long q3 = (long)info.Q3;
+            if (payload + q3 > data.Length)
+                throw new InvalidFormatException ("TLGqoi payload exceeds file size");
+
+            int token_offset = (int)payload;
+            int token_length = (int)q1;
+            int dt_offset = (int)(payload + q1);
+            int dt_length = (int)(q2 - q1);
+            int rt_offset = (int)(payload + q2);
+            int rt_length = (int)(q3 - q2);
+
+            var dtbl = ParseQwordChunk (data, dt_offset, dt_length, "DTBL");
+            var rtbl = ParseQwordChunk (data, rt_offset, rt_length, "RTBL");
+
+            if (rtbl.Values.Count == 0 || dtbl.Values.Count == 0)
+                throw new InvalidFormatException ("Empty TLGqoi tables");
+
+            if (dtbl.Values[0] < (ulong)(info.BandCount * 2))
+                throw new InvalidFormatException ("DTBL count smaller than 2*band_count");
+            if (rtbl.Values[0] < (ulong)info.BandCount)
+                throw new InvalidFormatException ("RTBL count smaller than band_count");
+
+            ulong rtbl_body_size = 0;
+            for (int i = 0; i < info.BandCount; ++i)
+                rtbl_body_size += rtbl.Values[1 + i];
+            if ((ulong)rtbl.Tail.Length != rtbl_body_size)
+                throw new InvalidFormatException ("RTBL body length mismatch");
+
+            var plans = BuildBandPlans (info, dtbl, rtbl);
+
+            int width = (int)info.Width;
+            int height = (int)info.Height;
+            var pixels = new byte[width * height * 4];
+            int out_pos = 0;
+
+            foreach (var plan in plans)
+            {
+                if (plan.TokenOffset < 0 || plan.TokenLength < 0 || plan.TokenOffset + plan.TokenLength > token_length)
+                    throw new InvalidFormatException ("Token stream slice out of range");
+                if (plan.RtblOffset < 0 || plan.RtblLength < 0 || plan.RtblOffset + plan.RtblLength > rtbl.Tail.Length)
+                    throw new InvalidFormatException ("RTBL stream slice out of range");
+
+                var qoi = new QoiLikeBandDecoder (data, token_offset + plan.TokenOffset, plan.TokenLength);
+                var rtbl_reader = new Lz4BlockUleb128Reader (rtbl.Tail, plan.RtblOffset, plan.RtblLength);
+
+                qoi.ResetBandState ();
+                ulong control_prefetch;
+                if (!rtbl_reader.ReadUleb128 (out control_prefetch))
+                    throw new InvalidFormatException ("Missing RTBL header value");
+
+                int visible_pixels = width * plan.BandHeightActual;
+                int logical_width = width * image_count;
+                int logical_pos = 0;
+                int phase = image_index;
+                ulong run_remaining = control_prefetch;
+                int control_remaining = plan.ControlCount;
+
+                int band_pixels_written = 0;
+                while (band_pixels_written < visible_pixels)
+                {
+                    while (run_remaining != 0)
+                    {
+                        --run_remaining;
+                        if (phase != 0)
+                            --phase;
+                        else
+                        {
+                            phase = image_count - 1;
+                            pixels[out_pos++] = qoi.PixelB;
+                            pixels[out_pos++] = qoi.PixelG;
+                            pixels[out_pos++] = qoi.PixelR;
+                            pixels[out_pos++] = qoi.PixelA;
+                            ++band_pixels_written;
+                            if (band_pixels_written >= visible_pixels)
+                                break;
+                        }
+                        ++logical_pos;
+                        if (logical_pos >= logical_width)
+                        {
+                            logical_pos = 0;
+                            phase = image_index;
+                        }
+                        if (band_pixels_written >= visible_pixels)
+                            break;
+                    }
+                    if (band_pixels_written >= visible_pixels)
+                        break;
+
+                    if (control_remaining <= 0)
+                        throw new InvalidFormatException ("TLGqoi control stream exhausted");
+
+                    --control_remaining;
+
+                    uint base_run;
+                    if (!qoi.DecodeToken (out base_run))
+                        throw new InvalidFormatException ("TLGqoi token stream exhausted");
+
+                    ulong extra_run;
+                    if (!rtbl_reader.ReadUleb128 (out extra_run))
+                        throw new InvalidFormatException ("RTBL body exhausted");
+
+                    run_remaining = (ulong)base_run + extra_run;
+                }
+            }
+
+            if (out_pos != pixels.Length)
+                throw new InvalidFormatException ("TLGqoi decoded pixel count mismatch");
+
+            return pixels;
         }
 
         ImageData ApplyTags (byte[] image, TlgMetaData meta, byte[] tail)
@@ -317,13 +589,6 @@ namespace GameRes.Formats.KiriKiri
                     src.Read (bit_pool, 0, byte_length);
 
                     // decode values
-                    // two most significant bits of bitlength are
-                    // entropy coding method;
-                    // 00 means Golomb method,
-                    // 01 means Gamma method (not yet suppoted),
-                    // 10 means modified LZSS method (not yet supported),
-                    // 11 means raw (uncompressed) data (not yet supported).
-
                     switch (method)
                     {
                     case 0:
@@ -621,10 +886,6 @@ namespace GameRes.Formats.KiriKiri
                                        uint[] inbuf, int inbuf_index,
                                        uint initialp, int oddskip, int dir)
         {
-            /*
-                chroma/luminosity decoding
-                (this does reordering, color correlation filter, MED/AVG  at a time)
-            */
             uint p, up;
 
             if (0 != start_block)
@@ -808,7 +1069,6 @@ namespace GameRes.Formats.KiriKiri
                     {3,5,13,24,51,95,192,384,257,},
                     {2,5,12,21,39,86,155,320,384,},
                     {2,3,9,18,33,61,129,258,511,},
-                /* Tuned by W.Dee, 2004/03/25 */
             };
 
             static TVP_Tables ()
@@ -819,9 +1079,6 @@ namespace GameRes.Formats.KiriKiri
 
             static void TVPTLG6InitLeadingZeroTable ()
             {
-                /* table which indicates first set bit position + 1. */
-                /* this may be replaced by BSF (IA32 instrcution). */
-
                 for (int i = 0; i < TVP_TLG6_LeadingZeroTable_SIZE; i++)
                 {
                     int cnt = 0;
@@ -845,32 +1102,23 @@ namespace GameRes.Formats.KiriKiri
                             TVPTLG6GolombBitLengthTable[a++,n] = (sbyte)i;
                     }
                     if(a != TVP_TLG6_GOLOMB_N_COUNT*2*128)
-                        throw new Exception ("Invalid data initialization");   /* THIS MUST NOT BE EXECUETED! */
-                            /* (this is for compressed table data check) */
+                        throw new Exception ("Invalid data initialization");
                 }
             }
         }
 
         void TVPTLG6DecodeGolombValuesForFirst (uint[] pixelbuf, int pixel_count, byte[] bit_pool)
         {
-            /*
-                decode values packed in "bit_pool".
-                values are coded using golomb code.
-
-                "ForFirst" function do dword access to pixelbuf,
-                clearing with zero except for blue (least siginificant byte).
-            */
             int bit_pool_index = 0;
 
-            int n = TVP_TLG6_GOLOMB_N_COUNT - 1; /* output counter */
-            int a = 0; /* summary of absolute values of errors */
+            int n = TVP_TLG6_GOLOMB_N_COUNT - 1;
+            int a = 0;
 
             int bit_pos = 1;
             bool zero = 0 == (bit_pool[bit_pool_index] & 1);
 
             for (int pixel = 0; pixel < pixel_count; )
             {
-                /* get running count */
                 int count;
 
                 {
@@ -901,19 +1149,11 @@ namespace GameRes.Formats.KiriKiri
                 }
                 if (zero)
                 {
-                    /* zero values */
-
-                    /* fill distination with zero */
                     do { pixelbuf[pixel++] = 0; } while (0 != --count);
-
                     zero = !zero;
                 }
                 else
                 {
-                    /* non-zero values */
-
-                    /* fill distination with glomb code */
-
                     do
                     {
                         int k = TVP_Tables.TVPTLG6GolombBitLengthTable[a,n];
@@ -971,22 +1211,17 @@ namespace GameRes.Formats.KiriKiri
 
         void TVPTLG6DecodeGolombValues (uint[] pixelbuf, int offset, int pixel_count, byte[] bit_pool)
         {
-            /*
-                decode values packed in "bit_pool".
-                values are coded using golomb code.
-            */
             uint mask = (uint)~(0xff << offset);
             int bit_pool_index = 0;
 
-            int n = TVP_TLG6_GOLOMB_N_COUNT - 1; /* output counter */
-            int a = 0; /* summary of absolute values of errors */
+            int n = TVP_TLG6_GOLOMB_N_COUNT - 1;
+            int a = 0;
 
             int bit_pos = 1;
             bool zero = 0 == (bit_pool[bit_pool_index] & 1);
 
             for (int pixel = 0; pixel < pixel_count; )
             {
-                /* get running count */
                 int count;
 
                 {
@@ -1017,19 +1252,11 @@ namespace GameRes.Formats.KiriKiri
                 }
                 if (zero)
                 {
-                    /* zero values */
-
-                    /* fill distination with zero */
                     do { pixelbuf[pixel++] &= mask; } while (0 != --count);
-
                     zero = !zero;
                 }
                 else
                 {
-                    /* non-zero values */
-
-                    /* fill distination with glomb code */
-
                     do
                     {
                         int k = TVP_Tables.TVPTLG6GolombBitLengthTable[a,n];
@@ -1083,6 +1310,402 @@ namespace GameRes.Formats.KiriKiri
                     } while (0 != --count);
                     zero = !zero;
                 }
+            }
+        }
+
+        sealed class QwordChunk
+        {
+            public readonly List<ulong> Values;
+            public readonly byte[] Tail;
+
+            public QwordChunk (List<ulong> values, byte[] tail)
+            {
+                Values = values;
+                Tail = tail;
+            }
+        }
+
+        sealed class BandPlan
+        {
+            public int Index;
+            public int YStart;
+            public int BandHeightActual;
+            public int TokenOffset;
+            public int TokenLength;
+            public int RtblOffset;
+            public int RtblLength;
+            public int ControlCount;
+        }
+
+        QwordChunk ParseQwordChunk (byte[] data, int offset, int length, string tag)
+        {
+            if (offset < 0 || length < 8 || offset + length > data.Length)
+                throw new InvalidFormatException ("Invalid chunk range");
+
+            if (data[offset+0] != tag[0] || data[offset+1] != tag[1] || data[offset+2] != tag[2] || data[offset+3] != tag[3])
+                throw new InvalidFormatException (string.Format ("Expected chunk {0}", tag));
+
+            int size = LittleEndian.ToInt32 (data, offset + 4);
+            if (size < 0 || size > length - 8)
+                throw new InvalidFormatException (string.Format ("Truncated {0} chunk", tag));
+
+            var values = new List<ulong>();
+            int pos = offset + 8;
+            int end = pos + size;
+            while (pos < end)
+            {
+                ulong value;
+                pos = ReadUleb64 (data, pos, end, out value);
+                values.Add (value);
+            }
+
+            int tail_len = length - 8 - size;
+            var tail = new byte[tail_len];
+            if (tail_len > 0)
+                Buffer.BlockCopy (data, end, tail, 0, tail_len);
+            return new QwordChunk (values, tail);
+        }
+
+        int ReadUleb64 (byte[] data, int pos, int end, out ulong value)
+        {
+            int shift = 0;
+            value = 0;
+            while (true)
+            {
+                if (pos >= end)
+                    throw new InvalidFormatException ("Truncated ULEB64");
+                byte b = data[pos++];
+                value |= (ulong)(b & 0x7F) << shift;
+                if (b < 0x80)
+                    return pos;
+                shift += 7;
+                if (shift >= 64)
+                    throw new InvalidFormatException ("ULEB64 too large");
+            }
+        }
+
+        List<BandPlan> BuildBandPlans (TlgMetaData info, QwordChunk dtbl, QwordChunk rtbl)
+        {
+            var plans = new List<BandPlan> (info.BandCount);
+            int token_offset = 0;
+            int rtbl_offset = 0;
+            int y = 0;
+            int height = (int)info.Height;
+
+            for (int i = 0; i < info.BandCount && y < height; ++i)
+            {
+                int band_h = info.BandHeight;
+                if (y + band_h > height)
+                    band_h = height - y;
+
+                int token_len = (int)dtbl.Values[1 + i * 2];
+                int control_count = (int)dtbl.Values[1 + i * 2 + 1];
+                int rtbl_len = (int)rtbl.Values[1 + i];
+
+                plans.Add (new BandPlan
+                {
+                    Index = i,
+                    YStart = y,
+                    BandHeightActual = band_h,
+                    TokenOffset = token_offset,
+                    TokenLength = token_len,
+                    RtblOffset = rtbl_offset,
+                    RtblLength = rtbl_len,
+                    ControlCount = control_count,
+                });
+
+                token_offset += token_len;
+                rtbl_offset += rtbl_len;
+                y += band_h;
+            }
+            return plans;
+        }
+
+        sealed class Lz4BlockUleb128Reader
+        {
+            readonly byte[] m_data;
+            readonly int m_end;
+            int m_file_pos;
+            readonly byte[][] m_bank = new byte[][] { null, null };
+            int m_bank_index = 1;
+            byte[] m_cur = null;
+            int m_cur_pos = 0;
+
+            public Lz4BlockUleb128Reader (byte[] data, int offset, int length)
+            {
+                m_data = data;
+                m_file_pos = offset;
+                m_end = offset + length;
+            }
+
+            bool FillBlock ()
+            {
+                if (m_file_pos + 4 > m_end)
+                    return false;
+                uint header = LittleEndian.ToUInt32 (m_data, m_file_pos);
+                m_file_pos += 4;
+                if (0 == header)
+                    return false;
+
+                int compressed_size = (int)((header >> 16) & 0xFFFF);
+                bool use_dict = 0 != (header & 0x8000);
+                int out_size = (int)(header & 0x7FFF);
+                if (0 == out_size)
+                    out_size = 0x8000;
+                if (m_file_pos + compressed_size > m_end)
+                    throw new InvalidFormatException ("Truncated RTBL LZ4 block");
+
+                byte[] previous = use_dict ? m_bank[m_bank_index & 1] : null;
+                m_bank_index ^= 1;
+                byte[] outbuf = Lz4DecompressBlockRaw (m_data, m_file_pos, compressed_size, out_size, previous);
+                m_file_pos += compressed_size;
+                m_bank[m_bank_index & 1] = outbuf;
+                m_cur = outbuf;
+                m_cur_pos = 0;
+                return true;
+            }
+
+            public bool ReadUleb128 (out ulong value)
+            {
+                int shift = 0;
+                value = 0;
+                while (true)
+                {
+                    if (null == m_cur || m_cur_pos >= m_cur.Length)
+                    {
+                        if (!FillBlock())
+                            return false;
+                    }
+                    byte b = m_cur[m_cur_pos++];
+                    value |= (ulong)(b & 0x7F) << shift;
+                    if (b < 0x80)
+                        return true;
+                    shift += 7;
+                    if (shift >= 64)
+                        throw new InvalidFormatException ("RTBL ULEB128 too large");
+                }
+            }
+        }
+
+        static byte[] Lz4DecompressBlockRaw (byte[] src, int offset, int length, int out_size, byte[] dictionary)
+        {
+            int ip = offset;
+            int end = offset + length;
+            var output = new byte[out_size];
+            int op = 0;
+            int dict_len = null != dictionary ? dictionary.Length : 0;
+
+            while (op < out_size)
+            {
+                if (ip >= end)
+                    throw new InvalidFormatException ("LZ4 block ended early");
+                int token = src[ip++];
+
+                int lit_len = token >> 4;
+                if (15 == lit_len)
+                {
+                    byte s;
+                    do
+                    {
+                        if (ip >= end)
+                            throw new InvalidFormatException ("Truncated LZ4 literal length");
+                        s = src[ip++];
+                        lit_len += s;
+                    } while (0xFF == s);
+                }
+
+                if (ip + lit_len > end)
+                    throw new InvalidFormatException ("Truncated LZ4 literals");
+                if (op + lit_len > out_size)
+                    lit_len = out_size - op;
+                Buffer.BlockCopy (src, ip, output, op, lit_len);
+                ip += lit_len;
+                op += lit_len;
+                if (op >= out_size)
+                    break;
+
+                if (ip + 2 > end)
+                    throw new InvalidFormatException ("Truncated LZ4 match offset");
+                int match_offset = src[ip] | (src[ip+1] << 8);
+                ip += 2;
+                if (0 == match_offset)
+                    throw new InvalidFormatException ("Invalid LZ4 offset");
+
+                int match_len = token & 0x0F;
+                if (15 == match_len)
+                {
+                    byte s;
+                    do
+                    {
+                        if (ip >= end)
+                            throw new InvalidFormatException ("Truncated LZ4 match length");
+                        s = src[ip++];
+                        match_len += s;
+                    } while (0xFF == s);
+                }
+                match_len += 4;
+
+                while (match_len > 0 && op < out_size)
+                {
+                    int src_index = op - match_offset;
+                    byte v;
+                    if (src_index >= 0)
+                    {
+                        v = output[src_index];
+                    }
+                    else
+                    {
+                        int dict_index = dict_len + src_index;
+                        if (null == dictionary || dict_index < 0 || dict_index >= dict_len)
+                            throw new InvalidFormatException ("LZ4 offset exceeds available dictionary/window");
+                        v = dictionary[dict_index];
+                    }
+                    output[op++] = v;
+                    --match_len;
+                }
+            }
+            if (op == out_size)
+                return output;
+
+            var result = new byte[op];
+            Buffer.BlockCopy (output, 0, result, 0, op);
+            return result;
+        }
+
+        sealed class QoiLikeBandDecoder
+        {
+            readonly byte[] m_data;
+            readonly int m_end;
+            int m_pos;
+            readonly Bgra32[] m_index = new Bgra32[64];
+            Bgra32 m_pixel;
+
+            public byte PixelB { get { return m_pixel.B; } }
+            public byte PixelG { get { return m_pixel.G; } }
+            public byte PixelR { get { return m_pixel.R; } }
+            public byte PixelA { get { return m_pixel.A; } }
+
+            public QoiLikeBandDecoder (byte[] data, int offset, int length)
+            {
+                m_data = data;
+                m_pos = offset;
+                m_end = offset + length;
+                m_pixel = new Bgra32 (0, 0, 0, 0xFF);
+            }
+
+            static int Hash (Bgra32 p)
+            {
+                return (7 * p.B + 5 * p.G + 3 * p.R + 11 * p.A) & 63;
+            }
+
+            Bgra32 StorePixel (Bgra32 p)
+            {
+                m_pixel = p;
+                m_index[Hash (p)] = p;
+                return p;
+            }
+
+            public bool DecodeToken (out uint run)
+            {
+                if (m_pos >= m_end)
+                {
+                    run = 0;
+                    return false;
+                }
+
+                byte op = m_data[m_pos++];
+                if (0xFF == op)
+                {
+                    if (m_pos + 4 > m_end)
+                        throw new InvalidFormatException ("Truncated RGBA token");
+                    byte r = m_data[m_pos++];
+                    byte g = m_data[m_pos++];
+                    byte b = m_data[m_pos++];
+                    byte a = m_data[m_pos++];
+                    StorePixel (new Bgra32 (b, g, r, a));
+                    run = 1;
+                    return true;
+                }
+                if (0xFE == op)
+                {
+                    if (m_pos + 3 > m_end)
+                        throw new InvalidFormatException ("Truncated RGB token");
+                    byte r = m_data[m_pos++];
+                    byte g = m_data[m_pos++];
+                    byte b = m_data[m_pos++];
+                    StorePixel (new Bgra32 (b, g, r, m_pixel.A));
+                    run = 1;
+                    return true;
+                }
+
+                int tag = op >> 6;
+                if (0 == tag)
+                {
+                    m_pixel = m_index[op & 0x3F];
+                    run = 1;
+                    return true;
+                }
+                if (1 == tag)
+                {
+                    StorePixel (new Bgra32 (
+                        (byte)((m_pixel.B + (op & 0x03) - 2) & 0xFF),
+                        (byte)((m_pixel.G + ((op >> 2) & 0x03) - 2) & 0xFF),
+                        (byte)((m_pixel.R + ((op >> 4) & 0x03) - 2) & 0xFF),
+                        m_pixel.A));
+                    run = 1;
+                    return true;
+                }
+                if (2 == tag)
+                {
+                    if (m_pos >= m_end)
+                        throw new InvalidFormatException ("Truncated LUMA token");
+                    byte b1 = m_data[m_pos++];
+                    int vg = (op & 0x3F) - 32;
+                    StorePixel (new Bgra32 (
+                        (byte)((m_pixel.B + vg + (b1 & 0x0F) - 8) & 0xFF),
+                        (byte)((m_pixel.G + vg) & 0xFF),
+                        (byte)((m_pixel.R + vg + ((b1 >> 4) & 0x0F) - 8) & 0xFF),
+                        m_pixel.A));
+                    run = 1;
+                    return true;
+                }
+                if (3 == tag)
+                {
+                    run = (uint)((op & 0x3F) + 1);
+                    return true;
+                }
+
+                run = 0;
+                return false;
+            }
+
+            public void ResetBandState ()
+            {
+                for (int i = 0; i < m_index.Length; ++i)
+                    m_index[i] = new Bgra32 (0, 0, 0, 0);
+                m_pixel = new Bgra32 (0, 0, 0, 0xFF);
+
+                uint run;
+                if (!DecodeToken (out run) || run != 1 || m_pixel.B != 0 || m_pixel.G != 0 || m_pixel.R != 0 || m_pixel.A != 0)
+                    throw new InvalidFormatException ("Band token prologue #0 mismatch");
+                if (!DecodeToken (out run) || run != 1 || m_pixel.B != 0 || m_pixel.G != 0 || m_pixel.R != 0 || m_pixel.A != 0xFF)
+                    throw new InvalidFormatException ("Band token prologue #1 mismatch");
+            }
+        }
+
+        struct Bgra32
+        {
+            public byte B;
+            public byte G;
+            public byte R;
+            public byte A;
+
+            public Bgra32 (byte b, byte g, byte r, byte a)
+            {
+                B = b;
+                G = g;
+                R = r;
+                A = a;
             }
         }
     }
