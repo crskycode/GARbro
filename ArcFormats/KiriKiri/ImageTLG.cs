@@ -203,7 +203,8 @@ namespace GameRes.Formats.KiriKiri
             if (meta.IsTlgRef)
                 return ReadTlgRef (file, meta);
             if (meta.IsTlgQoi)
-                return ReadTlgQoiImage (file, meta, meta.ImageIndex, meta.ImageCount);
+                throw new InvalidFormatException ("TLGqoi is a hidden backing image and cannot be opened directly.");
+                // return ReadTlgQoiImage (file, meta, meta.ImageIndex, meta.ImageCount);
 
             var image = ReadTlg (file, meta);
 
