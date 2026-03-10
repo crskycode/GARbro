@@ -235,14 +235,26 @@ namespace GameRes.Formats.KiriKiri
             if (string.IsNullOrEmpty (meta.HiddenName))
                 throw new InvalidFormatException ("TLGref hidden file name is empty");
 
-            string hidden_name = VFS.CombinePath (VFS.GetDirectoryName (meta.FileName), meta.HiddenName);
-            using (var hidden = VFS.OpenBinaryStream (hidden_name))
+            string hidden_name = meta.HiddenName;
+            string dir = "/" + VFS.GetDirectoryName (meta.FileName);
+            string candidate = string.IsNullOrEmpty (dir) ? hidden_name : VFS.CombinePath (dir, hidden_name);
+
+            Entry hidden_entry = null;
+
+            if (VFS.FileExists (candidate))
+                hidden_entry = VFS.FindFile (candidate);
+            else if (VFS.FileExists (hidden_name))
+                hidden_entry = VFS.FindFile (hidden_name);
+            else
+                throw new FileNotFoundException ("Unable to locate referenced TLGqoi file.", candidate);
+
+            using (var hidden = VFS.OpenBinaryStream (hidden_entry))
             {
                 var hidden_info = ReadMetaData (hidden) as TlgMetaData;
                 if (null == hidden_info || !hidden_info.IsTlgQoi)
                     throw new InvalidFormatException ("Referenced file is not TLGqoi");
 
-                hidden_info.FileName = hidden_name;
+                hidden_info.FileName = hidden_entry.Name;
                 if (hidden_info.RefId != meta.RefId)
                     throw new InvalidFormatException ("TLGref/TLGqoi ref_id mismatch");
 
@@ -250,15 +262,14 @@ namespace GameRes.Formats.KiriKiri
 
                 var image_meta = new TlgMetaData
                 {
-                    Width   = meta.Width != 0 ? meta.Width : hidden_info.Width,
-                    Height  = meta.Height != 0 ? meta.Height : hidden_info.Height,
-                    BPP     = 32,
+                    Width    = meta.Width != 0 ? meta.Width : hidden_info.Width,
+                    Height   = meta.Height != 0 ? meta.Height : hidden_info.Height,
+                    BPP      = 32,
                     FileName = meta.FileName,
                 };
                 return ImageData.Create (image_meta, PixelFormats.Bgra32, null, pixels, (int)image_meta.Width * 4);
             }
         }
-
         ImageData ReadTlgQoiImage (IBinaryStream file, TlgMetaData meta, int image_index, int image_count)
         {
             var pixels = ReadTlgQoi (file, meta, image_index, image_count);
