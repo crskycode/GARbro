@@ -600,6 +600,13 @@ namespace GameRes.Formats.KiriKiri
                     src.Read (bit_pool, 0, byte_length);
 
                     // decode values
+                    // two most significant bits of bitlength are
+                    // entropy coding method;
+                    // 00 means Golomb method,
+                    // 01 means Gamma method (not yet suppoted),
+                    // 10 means modified LZSS method (not yet supported),
+                    // 11 means raw (uncompressed) data (not yet supported).
+                    
                     switch (method)
                     {
                     case 0:
@@ -897,6 +904,10 @@ namespace GameRes.Formats.KiriKiri
                                        uint[] inbuf, int inbuf_index,
                                        uint initialp, int oddskip, int dir)
         {
+            /*
+                chroma/luminosity decoding
+                (this does reordering, color correlation filter, MED/AVG  at a time)
+            */
             uint p, up;
 
             if (0 != start_block)
@@ -1080,6 +1091,7 @@ namespace GameRes.Formats.KiriKiri
                     {3,5,13,24,51,95,192,384,257,},
                     {2,5,12,21,39,86,155,320,384,},
                     {2,3,9,18,33,61,129,258,511,},
+                    /* Tuned by W.Dee, 2004/03/25 */
             };
 
             static TVP_Tables ()
@@ -1090,6 +1102,9 @@ namespace GameRes.Formats.KiriKiri
 
             static void TVPTLG6InitLeadingZeroTable ()
             {
+                /* table which indicates first set bit position + 1. */
+                /* this may be replaced by BSF (IA32 instrcution). */
+                
                 for (int i = 0; i < TVP_TLG6_LeadingZeroTable_SIZE; i++)
                 {
                     int cnt = 0;
@@ -1113,23 +1128,31 @@ namespace GameRes.Formats.KiriKiri
                             TVPTLG6GolombBitLengthTable[a++,n] = (sbyte)i;
                     }
                     if(a != TVP_TLG6_GOLOMB_N_COUNT*2*128)
-                        throw new Exception ("Invalid data initialization");
+                        throw new Exception ("Invalid data initialization");   /* THIS MUST NOT BE EXECUETED! */
+                    /* (this is for compressed table data check) */
                 }
             }
         }
 
         void TVPTLG6DecodeGolombValuesForFirst (uint[] pixelbuf, int pixel_count, byte[] bit_pool)
         {
+            /*
+                decode values packed in "bit_pool".
+                values are coded using golomb code.
+                "ForFirst" function do dword access to pixelbuf,
+                clearing with zero except for blue (least siginificant byte).
+            */
             int bit_pool_index = 0;
 
-            int n = TVP_TLG6_GOLOMB_N_COUNT - 1;
-            int a = 0;
+            int n = TVP_TLG6_GOLOMB_N_COUNT - 1; /* output counter */
+            int a = 0; /* summary of absolute values of errors */
 
             int bit_pos = 1;
             bool zero = 0 == (bit_pool[bit_pool_index] & 1);
 
             for (int pixel = 0; pixel < pixel_count; )
             {
+                /* get running count */
                 int count;
 
                 {
@@ -1160,11 +1183,18 @@ namespace GameRes.Formats.KiriKiri
                 }
                 if (zero)
                 {
+                    /* zero values */
+
+                    /* fill distination with zero */
                     do { pixelbuf[pixel++] = 0; } while (0 != --count);
                     zero = !zero;
                 }
                 else
                 {
+                    /* non-zero values */
+
+                    /* fill distination with glomb code */
+                    
                     do
                     {
                         int k = TVP_Tables.TVPTLG6GolombBitLengthTable[a,n];
@@ -1222,17 +1252,22 @@ namespace GameRes.Formats.KiriKiri
 
         void TVPTLG6DecodeGolombValues (uint[] pixelbuf, int offset, int pixel_count, byte[] bit_pool)
         {
+            /*
+                decode values packed in "bit_pool".
+                values are coded using golomb code.
+            */
             uint mask = (uint)~(0xff << offset);
             int bit_pool_index = 0;
 
-            int n = TVP_TLG6_GOLOMB_N_COUNT - 1;
-            int a = 0;
+            int n = TVP_TLG6_GOLOMB_N_COUNT - 1; /* output counter */
+            int a = 0; /* summary of absolute values of errors */
 
             int bit_pos = 1;
             bool zero = 0 == (bit_pool[bit_pool_index] & 1);
 
             for (int pixel = 0; pixel < pixel_count; )
             {
+                /* get running count */
                 int count;
 
                 {
@@ -1263,11 +1298,18 @@ namespace GameRes.Formats.KiriKiri
                 }
                 if (zero)
                 {
+                    /* zero values */
+
+                    /* fill distination with zero */
                     do { pixelbuf[pixel++] &= mask; } while (0 != --count);
                     zero = !zero;
                 }
                 else
                 {
+                    /* non-zero values */
+
+                    /* fill distination with glomb code */
+                    
                     do
                     {
                         int k = TVP_Tables.TVPTLG6GolombBitLengthTable[a,n];
