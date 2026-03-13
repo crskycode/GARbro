@@ -136,6 +136,13 @@ namespace GameRes.Formats.Entis
                 using (input)
                     return DecodeBSHF (input, narc.Password);
             }
+            if (EncType.ERISACrypt == nent.Encryption)
+            {
+                Stream enc;
+                using (input)
+                    enc = DecodeBSHF (input, narc.Password);
+                return new ErisaNemesisStream (enc, (int)entry.Size);
+            }
             Trace.WriteLine (string.Format ("{0}: encryption scheme 0x{1:x8} not implemented",
                                             nent.Name, nent.Encryption));
             return input;
@@ -306,7 +313,7 @@ namespace GameRes.Formats.Entis
 
                     entry.Encryption = m_file.View.ReadUInt32 (dir_offset);
                     m_found_encrypted = m_found_encrypted || (EncType.Raw != entry.Encryption && EncType.ERISACode != entry.Encryption);
-                    bool is_packed = EncType.ERISACode == entry.Encryption;
+                    bool is_packed = EncType.ERISACode == entry.Encryption || EncType.ERISACrypt == entry.Encryption;
                     dir_offset += 4;
 
                     entry.Offset = base_offset + m_file.View.ReadInt64 (dir_offset);
