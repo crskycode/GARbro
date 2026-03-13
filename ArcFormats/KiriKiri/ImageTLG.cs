@@ -22,7 +22,7 @@ namespace GameRes.Formats.KiriKiri
     internal class TlgMetaData : ImageMetaData
     {
         public int Version;
-        public int DataOffset;
+        public long DataOffset;
     }
 
     [Export(typeof(ImageFormat))]
@@ -35,7 +35,7 @@ namespace GameRes.Formats.KiriKiri
         public TlgFormat ()
         {
             Extensions = new string[] { "tlg", "tlg5", "tlg6" };
-            Signatures = new uint[] { 0x30474C54, 0x35474C54, 0x36474C54, 0x35474CAB, 0x584D4B4A };
+            Signatures = new uint[] { 0x30474C54, 0x35474C54, 0x36474C54, 0x35474CAB, 0x584D4B4A, 0x6D474C54 };
         }
 
         public override ImageMetaData ReadMetaData (IBinaryStream stream)
@@ -45,7 +45,7 @@ namespace GameRes.Formats.KiriKiri
             if (!header.AsciiEqual ("TLG0.0\x00sds\x1a"))
                 offset = 0;
             int version;
-            if (!header.AsciiEqual (offset+6, "\x00raw\x1a"))
+            if (!header.AsciiEqual (offset+6, "\x00raw\x1a") && !header.AsciiEqual (offset+6, "\x00idx\x1a"))
                 return null;
             if (0xAB == header[offset])
                 header[offset] = (byte)'T';
@@ -53,6 +53,8 @@ namespace GameRes.Formats.KiriKiri
                 version = 6;
             else if (header.AsciiEqual (offset, "TLG5.0"))
                 version = 5;
+            else if (header.AsciiEqual (offset, "TLGmux"))
+                version = 0;
             else if (header.AsciiEqual (offset, "XXXYYY"))
             {
                 version = 5;
@@ -137,6 +139,8 @@ namespace GameRes.Formats.KiriKiri
             src.Position = info.DataOffset;
             if (6 == info.Version)
                 return ReadV6 (src, info);
+            else if (0 == info.Version)
+                return ReadMUX (src, info);
             else
                 return ReadV5 (src, info);
         }
@@ -1084,6 +1088,164 @@ namespace GameRes.Formats.KiriKiri
                     zero = !zero;
                 }
             }
+        }
+
+        static class QoiCodec
+        {
+            public const int Index = 0x00;
+            public const int Diff  = 0x40;
+            public const int Luma  = 0x80;
+            public const int Run   = 0xC0;
+            public const int Rgb   = 0xFE;
+            public const int Rgba  = 0xFF;
+            public const int Mask2 = 0xC0;
+            public const int HashTableSize = 64;
+        }
+
+        byte[] DecodeQOI (IBinaryStream src, uint width, uint height)
+        {
+            var output = new byte[4*width*height];
+            var table = new byte[4*QoiCodec.HashTableSize];
+            byte r = 0, g = 0, b = 0, a = 255;
+            var run = 0;
+            for (var dst = 0; dst < output.Length; dst += 4)
+            {
+                if (run > 0)
+                    run--;
+                else
+                {
+                    var b1 = src.ReadByte ();
+                    if (-1 == b1)
+                        throw new EndOfStreamException ();
+                    if (QoiCodec.Rgb == b1)
+                    {
+                        var rgb = src.ReadInt24 ();
+                        r = (byte)rgb;
+                        g = (byte)(rgb >> 8);
+                        b = (byte)(rgb >> 16);
+                    }
+                    else if (QoiCodec.Rgba == b1)
+                    {
+                        var rgba = src.ReadInt32 ();
+                        r = (byte)rgba;
+                        g = (byte)(rgba >> 8);
+                        b = (byte)(rgba >> 16);
+                        a = (byte)(rgba >> 24);
+                    }
+                    else if (QoiCodec.Index == (b1 & QoiCodec.Mask2))
+                    {
+                        var p1 = (b1 & ~QoiCodec.Mask2) * 4;
+                        r = table[p1  ];
+                        g = table[p1+1];
+                        b = table[p1+2];
+                        a = table[p1+3];
+                    }
+                    else if (QoiCodec.Diff == (b1 & QoiCodec.Mask2))
+                    {
+                        r += (byte)(((b1 >> 4) & 0x03) - 2);
+                        g += (byte)(((b1 >> 2) & 0x03) - 2);
+                        b += (byte)((b1 & 0x03) - 2);
+                    }
+                    else if (QoiCodec.Luma == (b1 & QoiCodec.Mask2))
+                    {
+                        var b2 = src.ReadByte ();
+                        if (-1 == b2)
+                            throw new EndOfStreamException ();
+                        var vg = (b1 & 0x3F) - 32;
+                        r += (byte)(vg - 8 + ((b2 >> 4) & 0x0F));
+                        g += (byte)vg;
+                        b += (byte)(vg - 8 + (b2 & 0x0F));
+                    }
+                    else if (QoiCodec.Run == (b1 & QoiCodec.Mask2))
+                    {
+                        run = b1 & 0x3F;
+                    }
+                    var p2 = (r*3 + g*5 + b*7 + a*11) % QoiCodec.HashTableSize*4;
+                    table[p2  ] = r;
+                    table[p2+1] = g;
+                    table[p2+2] = b;
+                    table[p2+3] = a;
+                }
+                output[dst  ] = b;
+                output[dst+1] = g;
+                output[dst+2] = r;
+                output[dst+3] = a;
+            }
+            return output;
+        }
+
+        byte[] ReadQOI (IBinaryStream src, TlgMetaData info)
+        {
+            var color_type = src.ReadByte ();
+            if (3 != color_type && 4 != color_type)
+                throw new InvalidFormatException ();
+            var width = src.ReadUInt32 ();
+            var height = src.ReadUInt32 ();
+            if (width != info.Width || height != info.Height)
+                throw new InvalidFormatException ();
+            while (true)
+            {
+                var entry_signature = src.ReadInt32 ();
+                var entry_size = src.ReadInt32 ();
+                if (0x52444851 == entry_signature) // 'QHDR'
+                {
+                    throw new NotImplementedException ();
+                }
+                else if (0 == entry_signature && 0 == entry_size)
+                    break;
+                else
+                    throw new InvalidFormatException ();
+            }
+            return DecodeQOI (src, width, height);
+        }
+
+        byte[] ReadMUX (IBinaryStream src, TlgMetaData info)
+        {
+            src.Position = info.DataOffset;
+            var slices = new List<TlgMetaData> ();
+            while (true)
+            {
+                var entry_signature = src.ReadInt32 ();
+                var entry_size = src.ReadInt32 ();
+                if (0x58554D43 == entry_signature) // 'CMUX'
+                {
+                    var entry = src.ReadBytes (entry_size);
+                    var count = entry.ToInt32 (0);
+                    if (0 == count)
+                        throw new InvalidFormatException ();
+                    var offset = 4;
+                    for (var i = 0; i < count; i++)
+                    {
+                        slices.Add (new TlgMetaData
+                        {
+                            OffsetX = entry.ToInt32 (offset),
+                            OffsetY = entry.ToInt32 (offset+4),
+                            Width   = entry.ToUInt32 (offset+8),
+                            Height  = entry.ToUInt32 (offset+12),
+                            DataOffset = entry.ToInt64 (offset+16)
+                        });
+                        offset += 24;
+                    }
+                }
+                else if (0 == entry_signature && 0 == entry_size)
+                    break;
+                else
+                    throw new InvalidFormatException ();
+            }
+            var data_offset = src.Position;
+            var image = new byte[4*info.Width*info.Height];
+            foreach (var slice_info in slices)
+            {
+                src.Position = data_offset + slice_info.DataOffset;
+                byte[] slice;
+                var header = src.ReadBytes (11);
+                if (header.AsciiEqual (0, "TLGqoi") && header.AsciiEqual (7, "raw"))
+                    slice = ReadQOI (src, slice_info);
+                else
+                    throw new NotImplementedException ();
+                BlendImage (image, info, slice, slice_info, 0);
+            }
+            return image;
         }
     }
 
