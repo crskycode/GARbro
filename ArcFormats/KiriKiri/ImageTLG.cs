@@ -35,7 +35,7 @@ namespace GameRes.Formats.KiriKiri
         public TlgFormat ()
         {
             Extensions = new string[] { "tlg", "tlg5", "tlg6" };
-            Signatures = new uint[] { 0x30474C54, 0x35474C54, 0x36474C54, 0x35474CAB, 0x584D4B4A, 0x6D474C54 };
+            Signatures = new uint[] { 0x30474C54, 0x35474C54, 0x36474C54, 0x35474CAB, 0x584D4B4A, 0x6D474C54, 0x71474C54 };
         }
 
         public override ImageMetaData ReadMetaData (IBinaryStream stream)
@@ -55,6 +55,8 @@ namespace GameRes.Formats.KiriKiri
                 version = 5;
             else if (header.AsciiEqual (offset, "TLGmux"))
                 version = 0;
+            else if (header.AsciiEqual (offset, "TLGqoi"))
+                version = 1;
             else if (header.AsciiEqual (offset, "XXXYYY"))
             {
                 version = 5;
@@ -141,6 +143,8 @@ namespace GameRes.Formats.KiriKiri
                 return ReadV6 (src, info);
             else if (0 == info.Version)
                 return ReadMUX (src, info);
+            else if (1 == info.Version)
+                return ReadQOI (src, info);
             else
                 return ReadV5 (src, info);
         }
@@ -1176,13 +1180,6 @@ namespace GameRes.Formats.KiriKiri
 
         byte[] ReadQOI (IBinaryStream src, TlgMetaData info)
         {
-            var color_type = src.ReadByte ();
-            if (3 != color_type && 4 != color_type)
-                throw new InvalidFormatException ();
-            var width = src.ReadUInt32 ();
-            var height = src.ReadUInt32 ();
-            if (width != info.Width || height != info.Height)
-                throw new InvalidFormatException ();
             while (true)
             {
                 var entry_signature = src.ReadInt32 ();
@@ -1196,7 +1193,7 @@ namespace GameRes.Formats.KiriKiri
                 else
                     throw new InvalidFormatException ();
             }
-            return DecodeQOI (src, width, height);
+            return DecodeQOI (src, info.Width, info.Height);
         }
 
         byte[] ReadMUX (IBinaryStream src, TlgMetaData info)
@@ -1240,7 +1237,16 @@ namespace GameRes.Formats.KiriKiri
                 byte[] slice;
                 var header = src.ReadBytes (11);
                 if (header.AsciiEqual (0, "TLGqoi") && header.AsciiEqual (7, "raw"))
+                {
+                    var channels = src.ReadByte ();
+                    var width = src.ReadUInt32 ();
+                    var height = src.ReadUInt32 ();
+                    if (3 != channels && 4 != channels)
+                        throw new InvalidFormatException ();
+                    if (width != slice_info.Width || height != slice_info.Height)
+                        throw new InvalidFormatException ();
                     slice = ReadQOI (src, slice_info);
+                }
                 else
                     throw new NotImplementedException ();
                 BlendImage (image, info, slice, slice_info, 0);
