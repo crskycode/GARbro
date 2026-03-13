@@ -41,7 +41,7 @@ namespace GameRes.Formats.BGI
         public override string Description { get { return "BGI/Ethornell engine resource archive"; } }
         public override uint     Signature { get { return 0x6b636150; } } // "Pack"
         public override bool  IsHierarchic { get { return false; } }
-        public override bool      CanWrite { get { return true; } } // Phase 3
+        public override bool      CanWrite { get { return true; } }
 
         [NonSerialized]
         private Dictionary<string, uint> m_extracted_keys = new Dictionary<string, uint>();
@@ -157,7 +157,7 @@ namespace GameRes.Formats.BGI
             }
         }
 
-        public void OnExtractionComplete(string targetDirectory)
+        public void OnExtractionComplete (string targetDirectory)
         {
             if (m_extracted_keys.Count == 0)
                 return;
@@ -238,7 +238,7 @@ namespace GameRes.Formats.BGI
             return existingKeys;
         }
 
-        private void ShowKeyFileWarning(string targetDirectory)
+        private void ShowKeyFileWarning (string targetDirectory)
         {
             if (!ShouldShowKeyWarning())
                 return;
@@ -278,7 +278,7 @@ namespace GameRes.Formats.BGI
             return true;
         }
 
-        private void SaveWarningPreference(bool showWarning)
+        private void SaveWarningPreference (bool showWarning)
         {
             try
             {
@@ -304,34 +304,10 @@ namespace GameRes.Formats.BGI
         public override void Create(Stream output, IEnumerable<Entry> list, ResourceOptions options,
                                     EntryCallback callback)
         {
+            // Reset action for the action to do when a key is missing.
             m_applyMissingKeyAction = null;
 
             var bgiOptions = GetOptions<BgiOptions>(options);
-
-            if (bgiOptions.ArchiveVersion == 1)
-            {
-                CreateBGIv1(output, list, bgiOptions, callback);
-            }
-            else
-            {
-                CreateBGIv2(output, list, bgiOptions, callback);
-            }
-        }
-
-        /// <summary>
-        /// BGI/Ethornell engine resource archive v1 (Packfile)
-        /// </summary>
-        /// <remarks>
-        /// <code>
-        /// Header      : "PACK    " + (File Count)
-        /// NameBytes   : 0x10 (16 bytes)
-        /// Padding     : (ulong) 0 (8 bytes)
-        /// Index Size  : 0x20 per entry (32 bytes)
-        /// </code>
-        /// </remarks>
-        private void CreateBGIv1(Stream output, IEnumerable<Entry> list, BgiOptions bgiOptions,
-                                    EntryCallback callback)
-        {
             var fileList = list.ToList();
 
             Dictionary<string, uint> keys = null;
@@ -346,118 +322,52 @@ namespace GameRes.Formats.BGI
             if (callback != null)
                 callback(fileCount + 1, null, null);
 
-            using (var writer = new BinaryWriter(output, System.Text.Encoding.ASCII, true))
+            if (bgiOptions.ArchiveVersion == 1)
             {
-                writer.Write(0x6b636150); // "Pack"
-                writer.Write(System.Text.Encoding.ASCII.GetBytes("File    "));
-                writer.Write((uint)fileCount);
-            }
-
-            // Calculate offset after index
-            long indexSize = fileCount * 0x20;
-            var index = new List<PackIndexEntry>();
-            var dataStream = new MemoryStream();
-
-            int callbackCount = 0;
-            foreach (var entry in fileList)
-            {
-                if (callback != null)
-                    callback(callbackCount++, entry, "Adding file");
-
-                var indexEntry = new PackIndexEntry
-                {
-                    Name = Path.GetFileNameWithoutExtension(entry.Name),
-                    Offset = (uint)dataStream.Position
-                };
-
-                byte[] fileData;
-                using (var input = File.OpenRead(entry.Name))
-                {
-                    fileData = new byte[input.Length];
-                    input.Read(fileData, 0, fileData.Length);
-                }
-
-                bool compressed = false;
-
-                try
-                {
-                    compressed = TryToCompressFile(fileData, Path.GetFileNameWithoutExtension(entry.Name),
-                        keys, dataStream, out uint compressedSize);
-
-                    indexEntry.Size = compressed ? compressedSize : (uint)fileData.Length;
-
-                    if (!compressed)
-                    {
-                        dataStream.Write(fileData, 0, fileData.Length);
-                    }
-
-                    index.Add(indexEntry);
-                }
-                catch (OperationCanceledException)
-                {            
-                    throw;
-                }
-            }
-
-            foreach (var entry in index)
-            {
-                byte[] nameBytes = new byte[0x10];
-                var entryNameBytes = System.Text.Encoding.ASCII.GetBytes(entry.Name);
-                Array.Copy(entryNameBytes, nameBytes, Math.Min(entryNameBytes.Length, 0x10));
-
-                output.Write(nameBytes, 0, 0x10);
-
+                // PACKFILE header (+ file count)
                 using (var writer = new BinaryWriter(output, System.Text.Encoding.ASCII, true))
                 {
-                    writer.Write(entry.Offset);
-                    writer.Write(entry.Size);
-                    writer.Write((ulong)0); // Padding
+                    writer.Write(0x6b636150); // "Pack"
+                    writer.Write(System.Text.Encoding.ASCII.GetBytes("File    "));
+                    writer.Write((uint)fileCount);
                 }
+
+                WriteArc(8, 0x10, fileList, keys, output, callback);
             }
+            else
+            {
+                // BURIKO ARC header (+ file count)
+                using (var writer = new BinaryWriter(output, System.Text.Encoding.ASCII, true))
+                {
+                    writer.Write(System.Text.Encoding.ASCII.GetBytes("BURIKO ARC20"));
+                    writer.Write((uint)fileCount);
+                }
 
-            dataStream.Position = 0;
-            dataStream.CopyTo(output);
-
-            if (callback != null)
-                callback(callbackCount, null, "Archive created");
+                WriteArc(0x18, 0x60, fileList, keys, output, callback);
+            }
         }
 
         /// <summary>
-        /// BGI/Ethornell engine resource archive v2 (BURIKO ARC)
+        /// Creation of .arc file
         /// </summary>
         /// <remarks>
         /// <code>
+        /// PACKFILE (v1):
+        /// Header      : "PACK    " + (File Count)
+        /// NameBytes   : 0x10 (16 bytes)
+        /// Padding     : (ulong) 0 (8 bytes)
+        /// Index Size  : 0x20 per entry (32 bytes)
+        /// 
+        /// BURIKO ARC (v2):
         /// Header      : "BURIKO ARC20" + (File Count)
         /// NameBytes   : 0x60 (96 bytes)
         /// Padding     : 0x18 (24 bytes)
         /// Index Size  : 0x80 (128 bytes per entry)
         /// </code>
         /// </remarks>
-        private void CreateBGIv2(Stream output, IEnumerable<Entry> list, BgiOptions bgiOptions,
-                                    EntryCallback callback)
+        private void WriteArc (int paddingSize, int nameByteSize, List<Entry> fileList, 
+            Dictionary<string, uint> keys, Stream output, EntryCallback callback)
         {
-            var fileList = list.ToList();
-
-            Dictionary<string, uint> keys = null;
-            if (bgiOptions.CompressFiles)
-            {
-                keys = LoadKeysForCompress(fileList, bgiOptions.KeyFilePath);
-            }
-
-            fileList = fileList.Where(e => !e.Name.EndsWith("bgi_keys.dat", StringComparison.OrdinalIgnoreCase)).ToList();
-
-            int fileCount = fileList.Count;
-            if (callback != null)
-                callback(fileCount + 1, null, null);
-
-            using (var writer = new BinaryWriter(output, System.Text.Encoding.ASCII, true))
-            {
-                writer.Write(System.Text.Encoding.ASCII.GetBytes("BURIKO ARC20"));
-                writer.Write((uint)fileCount);
-            }
-
-            // Calculate offset after index
-            long indexSize = fileCount * 0x80;
             var index = new List<PackIndexEntry>();
             var dataStream = new MemoryStream();
 
@@ -473,26 +383,24 @@ namespace GameRes.Formats.BGI
                     Offset = (uint)dataStream.Position
                 };
 
-                byte[] fileData;
-                using (var input = File.OpenRead(entry.Name))
-                {
-                    fileData = new byte[input.Length];
-                    input.Read(fileData, 0, fileData.Length);
-                }
-
-                bool compressed = false;
+                byte[] fileData = File.ReadAllBytes(entry.Name);
 
                 try
                 {
-                    compressed = TryToCompressFile(fileData, Path.GetFileNameWithoutExtension(entry.Name),
-                        keys, dataStream, out uint compressedSize);
+                    var result = TryToCompressFile(
+                        fileData,
+                        Path.GetFileNameWithoutExtension(entry.Name),
+                        keys,
+                        dataStream,
+                        out uint compressedSize);
 
-                    indexEntry.Size = compressed ? compressedSize : (uint)fileData.Length;
+                    if (result == PackResult.Skipped)
+                        continue;
 
-                    if (!compressed)
-                    {
+                    indexEntry.Size = (result == PackResult.Compressed) ? compressedSize : (uint)fileData.Length;
+
+                    if (result == PackResult.PackedUncompressed)
                         dataStream.Write(fileData, 0, fileData.Length);
-                    }
 
                     index.Add(indexEntry);
                 }
@@ -502,21 +410,24 @@ namespace GameRes.Formats.BGI
                 }
             }
 
+            // Write file index, offset and size
             foreach (var entry in index)
             {
-                byte[] nameBytes = new byte[0x60];
+                byte[] nameBytes = new byte[nameByteSize];
                 var entryNameBytes = System.Text.Encoding.ASCII.GetBytes(entry.Name);
-                Array.Copy(entryNameBytes, nameBytes, Math.Min(entryNameBytes.Length, 0x60));
-                output.Write(nameBytes, 0, 0x60);
+
+                Array.Copy(entryNameBytes, nameBytes, Math.Min(entryNameBytes.Length, nameByteSize));
+                output.Write(nameBytes, 0, nameByteSize);
 
                 using (var writer = new BinaryWriter(output, System.Text.Encoding.ASCII, true))
                 {
                     writer.Write(entry.Offset);
                     writer.Write(entry.Size);
-                    writer.Write(new byte[0x18]); // Padding
+                    writer.Write(new byte[paddingSize]);
                 }
             }
 
+            // Write all the file contents concatenated
             dataStream.Position = 0;
             dataStream.CopyTo(output);
 
@@ -586,7 +497,7 @@ namespace GameRes.Formats.BGI
             return false;
         }
 
-        private bool TryToCompressFile(byte[] fileData, string fileName, Dictionary<string, uint> keys,
+        private PackResult TryToCompressFile(byte[] fileData, string fileName, Dictionary<string, uint> keys,
                                      MemoryStream dataStream, out uint compressedSize)
         {
             compressedSize = 0;
@@ -595,8 +506,7 @@ namespace GameRes.Formats.BGI
 
             if (keys == null || keys.Count == 0)
             {
-                System.Diagnostics.Trace.WriteLine($"No keys dictionary, packing {fileName} uncompressed", "BgiOpener");
-                return false;
+                return PackResult.PackedUncompressed;
             }
 
             if (!keys.TryGetValue(fileName, out uint key))
@@ -607,20 +517,12 @@ namespace GameRes.Formats.BGI
                     System.Diagnostics.Trace.WriteLine($"Applying saved action {m_applyMissingKeyAction.Value} to {fileName}", "BgiOpener");
 
                     if (m_applyMissingKeyAction.Value == MissingKeyAction.Cancel)
-                    {
                         throw new OperationCanceledException("Archive creation canceled by user");
-                    }
-                    else if (m_applyMissingKeyAction.Value == MissingKeyAction.Skip)
-                    {
-                        // Don't add to archive, skip the file
-                        compressedSize = 0;
-                        return false;
-                    }
-                    else // Pack Uncompressed
-                    {
-                        System.Diagnostics.Trace.WriteLine($"Packing {fileName} uncompressed (apply to all)", "BgiOpener");
-                        return false;
-                    }
+
+                    if (m_applyMissingKeyAction.Value == MissingKeyAction.Skip)
+                        return PackResult.Skipped;
+
+                    return PackResult.PackedUncompressed;
                 }
 
                 var (action, applyToAll) = ShowMissingKeyDialog(fileName);
@@ -632,20 +534,12 @@ namespace GameRes.Formats.BGI
                 }
 
                 if (action == MissingKeyAction.Cancel)
-                {
                     throw new OperationCanceledException("Archive creation canceled by user");
-                }
-                else if (action == MissingKeyAction.Skip)
-                {
-                    System.Diagnostics.Trace.WriteLine($"Skipping {fileName}", "BgiOpener");
-                    compressedSize = 0;
-                    return false;
-                }
-                else // Pack Uncompressed
-                {
-                    System.Diagnostics.Trace.WriteLine($"Packing {fileName} uncompressed", "BgiOpener");
-                    return false;
-                }
+
+                if (action == MissingKeyAction.Skip)
+                    return PackResult.Skipped;
+
+                return PackResult.PackedUncompressed;
             }
 
             try
@@ -663,12 +557,12 @@ namespace GameRes.Formats.BGI
                 compressedSize = (uint)compressedData.Length;
 
                 System.Diagnostics.Trace.WriteLine($"Compressed {fileName}: {fileData.Length} -> {compressedData.Length} bytes", "BgiOpener");
-                return true;
+                return PackResult.Compressed;
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Trace.WriteLine($"Compression failed for {fileName}: {ex.Message}\n{ex.StackTrace}", "BgiOpener");
-                return false;
+                return PackResult.PackedUncompressed;
             }
         }
 
@@ -705,6 +599,13 @@ namespace GameRes.Formats.BGI
             public string Name;
             public uint Offset;
             public uint Size;
+        }
+
+        private enum PackResult
+        {
+            Compressed,
+            PackedUncompressed,
+            Skipped
         }
     }
 
