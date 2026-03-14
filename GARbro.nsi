@@ -34,6 +34,7 @@ Var StartMenuFolder
 !insertmacro MUI_LANGUAGE "Russian"
 !insertmacro MUI_LANGUAGE "Korean"
 !insertmacro MUI_LANGUAGE "SimpChinese"
+!insertmacro MUI_LANGUAGE "TradChinese"
 !insertmacro MUI_LANGUAGE "Japanese"
 
 !macro InstallSubDir dir
@@ -81,6 +82,7 @@ Section "install"
     !insertmacro InstallSubDir ko-KR
     !insertmacro InstallSubDir ru-RU
     !insertmacro InstallSubDir zh-Hans
+	!insertmacro InstallSubDir zh-Hant
     !insertmacro InstallSubDir x64
     !insertmacro InstallSubDir x86
 
@@ -137,6 +139,7 @@ Section "uninstall"
     RMDir /r $INSTDIR\ko-KR
     RMDir /r $INSTDIR\ru-RU
     RMDir /r $INSTDIR\zh-Hans
+	RMDir /r $INSTDIR\zh-Hant
     RMDir /r $INSTDIR\x64
     RMDir /r $INSTDIR\x86
     RMDir $INSTDIR

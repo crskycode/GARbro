@@ -1020,6 +1020,7 @@
     <Compile Include="Zyx\ImageMTL.cs" />
     <Compile Include="Zyx\ImageSPL.cs" />
     <EmbeddedResource Include="Strings\arcStrings.zh-Hans.resx" />
+    <EmbeddedResource Include="Strings\arcStrings.zh-Hant.resx" />
     <Compile Include="Seraphim\ArcSeraph.cs" />
     <Compile Include="ArcSPack.cs" />
     <Compile Include="NitroPlus\ArcSteinsGate.cs" />
