@@ -1,5 +1,9 @@
 name: .NET Framework Build
-on: [push, pull_request,workflow_dispatch: ]
+on:
+  push:
+  pull_request:
+  workflow_dispatch: # 這裡不需要冒號，單獨一行即可
+
 jobs:
   build:
     runs-on: windows-latest
