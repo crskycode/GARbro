@@ -135,10 +135,10 @@ namespace GameRes.Formats.Entis
             if (EncType.SimpleCrypt32 == nent.Encryption)
             {
                 if (0 != size % 4)
-                    throw new InvalidFormatException();
+                    throw new InvalidFormatException ();
 
                 using (input)
-                    return DecodeSimpleCrypt32 (input, narc.Password, BitConverter.ToUInt32(nent.Extra, 4));
+                    return DecodeSimpleCrypt32 (input, narc.Password, BitConverter.ToUInt32 (nent.Extra, 4));
             }
 
             if (EncType.BSHFCrypt == nent.Encryption)
@@ -251,36 +251,33 @@ namespace GameRes.Formats.Entis
 
         Stream DecodeSimpleCrypt32(Stream input, string password, uint imul_key)
         {
-            var xor_key_map = Encoding.UTF8.GetBytes(password);
-            var password_crc32 = Crc32.Compute(xor_key_map, 0, xor_key_map.Length);
+            var xor_key_map = Encoding.UTF8.GetBytes (password);
+            imul_key ^= Crc32.Compute (xor_key_map, 0, xor_key_map.Length);
 
-            imul_key ^= password_crc32;
-
-            for (int i = 0;  i < xor_key_map.Length; i++)
+            for (int i = 0; i < xor_key_map.Length; i++)
             {
-                byte key_byte = (byte)~xor_key_map[i];
+                var key_byte   = (byte)~xor_key_map[i];
                 xor_key_map[i] = (byte)(key_byte ^ (key_byte * 7));
             }
 
-            byte[] buffer = new byte[input.Length];
+            var buffer = new byte[input.Length];
             input.Read(buffer, 0, (int)input.Length);
 
-            Span<uint> buffer_span = MemoryMarshal.Cast<byte, uint>(buffer);
-            ReadOnlySpan<uint> xor_key_span = MemoryMarshal.Cast<byte, uint>(xor_key_map);
+            var buffer_span  = MemoryMarshal.Cast<byte, uint> (buffer);
+            var xor_key_span = MemoryMarshal.Cast<byte, uint> (xor_key_map);
 
-            for(int i = 0; i < buffer_span.Length; i += xor_key_span.Length)
+            for (int i = 0; i < buffer_span.Length; i += xor_key_span.Length)
             {
-                int window_size = Math.Min(buffer_span.Length - i, xor_key_span.Length);
+                var window_size = Math.Min (buffer_span.Length - i, xor_key_span.Length);
+                var window_span = buffer_span.Slice (i, window_size);
 
-                Span<uint> window_span = buffer_span.Slice(i, window_size);
-
-                for (int j = 0;  j < window_size; j++)
+                for (int j = 0; j < window_size; j++)
                 {
                     window_span[j] = (window_span[j] * imul_key) ^ xor_key_span[j];
                 }
             }
 
-            return new MemoryStream(buffer);
+            return new MemoryStream (buffer);
         }
 
         public override ResourceOptions GetDefaultOptions ()
