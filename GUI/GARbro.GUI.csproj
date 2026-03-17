@@ -314,6 +314,7 @@
     <EmbeddedResource Include="Strings\guiStrings.ru-RU.resx" />
     <EmbeddedResource Include="..\LICENSE" />
     <EmbeddedResource Include="Strings\guiStrings.zh-Hans.resx" />
+    <EmbeddedResource Include="Strings\guiStrings.zh-Hant.resx" />
     <None Include="packages.config" />
     <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">

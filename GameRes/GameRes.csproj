@@ -144,6 +144,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Strings\garStrings.ru-RU.resx" />
     <EmbeddedResource Include="Strings\garStrings.zh-Hans.resx" />
+    <EmbeddedResource Include="Strings\garStrings.zh-Hant.resx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

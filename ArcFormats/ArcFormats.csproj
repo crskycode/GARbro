@@ -972,6 +972,7 @@
     <Compile Include="VnEngine\ImageZAW.cs" />
     <EmbeddedResource Include="Abogado\keytable.dat" />
     <EmbeddedResource Include="Strings\arcStrings.ja-JP.resx" />
+    <EmbeddedResource Include="Strings\arcStrings.zh-Hant.resx" />
     <EmbeddedResource Include="Unity\strings.dat" />
     <EmbeddedResource Include="ScrPlayer\ImgControlTable1" />
     <EmbeddedResource Include="ScrPlayer\ImgControlTable2" />
