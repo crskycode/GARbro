@@ -16,6 +16,8 @@ using GameRes.Utility;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using K4os.Compression.LZ4;
+using System.Threading.Tasks;
 
 namespace GameRes.Formats.KiriKiri
 {
@@ -1178,21 +1180,347 @@ namespace GameRes.Formats.KiriKiri
             return output;
         }
 
+        class Lz4DecodeStream
+        {
+            readonly IBinaryStream m_input;
+            readonly byte[][]      m_buffer;
+            readonly int[]         m_size;
+            int                    m_index;
+            int                    m_pos;
+
+            const int BUFFER_SIZE = 0x8000;
+
+            public Lz4DecodeStream (IBinaryStream input)
+            {
+                m_input = input;
+                m_buffer = new byte[2][];
+                m_size = new int[2];
+                for (var i = 0; i < m_buffer.Length; i++)
+                    m_buffer[i] = new byte[BUFFER_SIZE];
+            }
+
+            bool FillBuffer ()
+            {
+                if (m_input.Position == m_input.Length)
+                    return false;
+                var v1 = m_input.ReadUInt16 ();
+                var v2 = m_input.ReadUInt16 ();
+                var input = m_input.ReadBytes (v2);
+                if (v2 != input.Length)
+                    throw new EndOfStreamException ();
+                var size = v1 & 0x7FFF;
+                if (0 == size)
+                    size = 0x8000;
+                var dst = m_index ^ 1;
+                var dic = m_index;
+                int num;
+                if (0 != (v1 & 0x8000))
+                {
+                    if (0 == m_size[dic])
+                        throw new InvalidFormatException ();
+                    num = LZ4Codec.Decode (input, m_buffer[dst], m_buffer[dic].AsSpan (0, m_size[dic]));
+                }
+                else
+                    num = LZ4Codec.Decode (input, m_buffer[dst]);
+                if (-1 == num || size != num)
+                    throw new InvalidFormatException ();
+                m_size[dst] = num;
+                m_index ^= 1;
+                m_pos = 0;
+                return true;
+            }
+
+            public int ReadByte ()
+            {
+                if (m_pos == m_size[m_index])
+                {
+                    if (!FillBuffer ())
+                        return -1;
+                }
+                var idx = m_index;
+                if (m_pos == m_size[idx])
+                    return -1;
+                return m_buffer[idx][m_pos++];
+            }
+        }
+
+        class RunDecodeStream
+        {
+            readonly Lz4DecodeStream m_input;
+
+            public RunDecodeStream (IBinaryStream input)
+            {
+                m_input = new Lz4DecodeStream (input);
+            }
+
+            public int Read ()
+            {
+                var value = 0;
+                var shift = 0;
+                while (shift < 32)
+                {
+                    var b = m_input.ReadByte ();
+                    if (-1 == b)
+                        throw new EndOfStreamException ();
+                    value |= (int)(b & 0x7F) << shift;
+                    if (0 == (b & 0x80))
+                        break;
+                    shift += 7;
+                }
+                return value;
+            }
+        }
+
+        class QoiDecodeStream
+        {
+            readonly IBinaryStream m_input;
+            readonly byte[]        m_table;
+            uint                   m_pixel;
+
+            public QoiDecodeStream (IBinaryStream input)
+            {
+                m_input = input;
+                m_table = new byte[4*QoiCodec.HashTableSize];
+                m_pixel = 0xFF000000;
+            }
+
+            public int Read (out uint output)
+            {
+                var r = (byte)m_pixel;
+                var g = (byte)(m_pixel >> 8);
+                var b = (byte)(m_pixel >> 16);
+                var a = (byte)(m_pixel >> 24);
+                var run = 1;
+                var b1 = m_input.ReadByte ();
+                if (-1 == b1)
+                    throw new EndOfStreamException ();
+                if (QoiCodec.Rgb == b1)
+                {
+                    var rgb = m_input.ReadInt24 ();
+                    r = (byte)rgb;
+                    g = (byte)(rgb >> 8);
+                    b = (byte)(rgb >> 16);
+                }
+                else if (QoiCodec.Rgba == b1)
+                {
+                    var rgba = m_input.ReadInt32 ();
+                    r = (byte)rgba;
+                    g = (byte)(rgba >> 8);
+                    b = (byte)(rgba >> 16);
+                    a = (byte)(rgba >> 24);
+                }
+                else if (QoiCodec.Index == (b1 & QoiCodec.Mask2))
+                {
+                    var p1 = (b1 & ~QoiCodec.Mask2) * 4;
+                    r = m_table[p1  ];
+                    g = m_table[p1+1];
+                    b = m_table[p1+2];
+                    a = m_table[p1+3];
+                }
+                else if (QoiCodec.Diff == (b1 & QoiCodec.Mask2))
+                {
+                    r += (byte)(((b1 >> 4) & 0x03) - 2);
+                    g += (byte)(((b1 >> 2) & 0x03) - 2);
+                    b += (byte)((b1 & 0x03) - 2);
+                }
+                else if (QoiCodec.Luma == (b1 & QoiCodec.Mask2))
+                {
+                    var b2 = m_input.ReadByte ();
+                    if (-1 == b2)
+                        throw new EndOfStreamException ();
+                    var vg = (b1 & 0x3F) - 32;
+                    r += (byte)(vg - 8 + ((b2 >> 4) & 0x0F));
+                    g += (byte)vg;
+                    b += (byte)(vg - 8 + (b2 & 0x0F));
+                }
+                else if (QoiCodec.Run == (b1 & QoiCodec.Mask2))
+                {
+                    run = (b1 & 0x3F) + 1;
+                }
+                var p2 = (r*3 + g*5 + b*7 + a*11) % QoiCodec.HashTableSize*4;
+                m_table[p2  ] = r;
+                m_table[p2+1] = g;
+                m_table[p2+2] = b;
+                m_table[p2+3] = a;
+                m_pixel = (uint)(r | (g << 8) | (b << 16) | (a << 24));
+                output = (uint)(b | (g << 8) | (r << 16) | (a << 24));
+                return run;
+            }
+        }
+
+        class QoiBlockDecoder
+        {
+            readonly QoiDecodeStream m_qoi;
+            readonly RunDecodeStream m_run;
+            readonly int    m_pixel_count;
+            readonly int    m_layer_index;
+            readonly int    m_layer_count;
+            readonly byte[] m_output;
+            readonly int    m_dst;
+
+            public QoiBlockDecoder (byte[] qoi, byte[] run, int pixel_count, int layer_index, int layer_count, byte[] output, int dst)
+            {
+                m_qoi = new QoiDecodeStream (new BinMemoryStream (qoi));
+                m_run = new RunDecodeStream (new BinMemoryStream (run));
+                m_pixel_count = pixel_count;
+                m_layer_index = layer_index;
+                m_layer_count = layer_count;
+                m_output = output;
+                m_dst = dst;
+            }
+
+            public void Decode ()
+            {
+                m_qoi.Read (out var p0);
+                m_qoi.Read (out var p1);
+                if (0 != p0 || 0xFF000000 != p1)
+                    throw new InvalidFormatException ();
+                var r0 = m_run.Read();
+                if (0 != r0)
+                    throw new InvalidFormatException ();
+                var dst = m_dst;
+                var count = m_pixel_count;
+                var skip = m_layer_index;
+                while (count --> 0)
+                {
+                    var r1 = m_qoi.Read (out var pixel);
+                    var r2 = m_run.Read ();
+                    var run = r1 + r2;
+                    while (run --> 0)
+                    {
+                        if (skip > 0)
+                            --skip;
+                        else
+                        {
+                            skip = m_layer_count-1;
+                            m_output[dst  ] = (byte)pixel;
+                            m_output[dst+1] = (byte)(pixel >> 8);
+                            m_output[dst+2] = (byte)(pixel >> 16);
+                            m_output[dst+3] = (byte)(pixel >> 24);
+                            dst += 4;
+                        }
+                    }
+                }
+            }
+        }
+
+        long[] DecodeArray (ReadOnlySpan<byte> input)
+        {
+            var output = new List<long> (input.Length);
+            var i = 0;
+            while (i < input.Length)
+            {
+                long value = 0;
+                var shift = 0;
+                while (shift < 64)
+                {
+                    var b = input[i++];
+                    value |= (long)(b & 0x7F) << shift;
+                    if (0 == (b & 0x80))
+                        break;
+                    shift += 7;
+                    if (i >= input.Length)
+                        throw new EndOfStreamException ();
+                }
+                output.Add (value);
+            }
+            return output.ToArray ();
+        }
+
+        long[] ReadArray (IBinaryStream src, long offset, int signature)
+        {
+            src.Position = offset;
+            if (signature != src.ReadInt32 ())
+                throw new InvalidFormatException ();
+            var length = src.ReadInt32 ();
+            var input = src.ReadBytes (length);
+            if (input.Length != length)
+                throw new EndOfStreamException ();
+            return DecodeArray (input);
+        }
+
+        byte[] DecodeMultiLayerQOI (IBinaryStream src, uint width, uint height, byte[] qhdr, int layer)
+        {
+            var data_offset  = src.Position;
+
+            var layer_count  = qhdr.ToInt32 (4);
+            var block_height = qhdr.ToInt32 (8);
+            var block_count  = qhdr.ToInt32 (12);
+            var dtbl_offset  = qhdr.ToInt64 (24);
+            var rtbl_offset  = qhdr.ToInt64 (32);
+
+            if (layer_count < 1)
+                throw new InvalidFormatException ();
+
+            if (0 == block_count)
+                throw new NotImplementedException ();
+
+            long[] dtbl = ReadArray (src, data_offset+dtbl_offset, 0x4C425444);
+            if (0 == dtbl.Length || dtbl.Length != 1+2*block_count || dtbl[0] != dtbl.Length-1)
+                throw new InvalidFormatException ();
+
+            long[] rtbl = ReadArray (src, data_offset+rtbl_offset, 0x4C425452);
+            if (0 == rtbl.Length || rtbl.Length != 1+block_count || rtbl[0] != rtbl.Length-1)
+                throw new InvalidFormatException ();
+
+            var tasks = new List<Task> (block_count);
+            var output = new byte[4*width*height];
+
+            var qoi_offset = data_offset;
+            var run_offset = src.Position;
+
+            for (var i = 0; i < block_count; i++)
+            {
+                var qoi_size   = (int) dtbl[1+2*i];
+                var run_size   = (int) rtbl[1+i];
+                var num_pixels = (int) dtbl[1+2*i+1];
+
+                src.Position = qoi_offset;
+                var qoi = src.ReadBytes (qoi_size);
+                if (qoi_size != qoi.Length)
+                    throw new EndOfStreamException ();
+
+                src.Position = run_offset;
+                var run = src.ReadBytes (run_size);
+                if (run_size != run.Length)
+                    throw new EndOfStreamException ();
+
+                qoi_offset += qoi_size;
+                run_offset += run_size;
+
+                var dst = block_height*i * 4*(int)width;
+
+                var decoder = new QoiBlockDecoder (qoi, run, num_pixels, layer, layer_count, output, dst);
+
+                var task = Task.Run (() => decoder.Decode ());
+                tasks.Add (task);
+            }
+            Task.WhenAll (tasks).Wait ();
+            return output;
+        }
+
         byte[] ReadQOI (IBinaryStream src, TlgMetaData info)
         {
+            var qhdr = Array.Empty<byte> ();
             while (true)
             {
                 var entry_signature = src.ReadInt32 ();
                 var entry_size = src.ReadInt32 ();
                 if (0x52444851 == entry_signature) // 'QHDR'
                 {
-                    throw new NotImplementedException ();
+                    if (0x30 != entry_size)
+                        throw new InvalidFormatException ();
+                    qhdr = src.ReadBytes (entry_size);
+                    if (qhdr.Length != entry_size)
+                        throw new EndOfStreamException ();
                 }
                 else if (0 == entry_signature && 0 == entry_size)
                     break;
                 else
                     throw new InvalidFormatException ();
             }
+            if (0 != qhdr.Length)
+                return DecodeMultiLayerQOI (src, info.Width, info.Height, qhdr, 0);
             return DecodeQOI (src, info.Width, info.Height);
         }
 
