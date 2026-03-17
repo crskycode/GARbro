@@ -38,7 +38,7 @@ namespace GameRes.Formats.KiriKiri
         public TlgFormat ()
         {
             Extensions = new string[] { "tlg", "tlg5", "tlg6" };
-            Signatures = new uint[] { 0x30474C54, 0x35474C54, 0x36474C54, 0x35474CAB, 0x584D4B4A, 0x6D474C54, 0x71474C54 };
+            Signatures = new uint[] { 0x30474C54, 0x35474C54, 0x36474C54, 0x35474CAB, 0x584D4B4A, 0x6D474C54, 0x71474C54, 0x72474C54 };
         }
 
         public override ImageMetaData ReadMetaData (IBinaryStream stream)
@@ -60,6 +60,8 @@ namespace GameRes.Formats.KiriKiri
                 version = 0;
             else if (header.AsciiEqual (offset, "TLGqoi"))
                 version = 1;
+            else if (header.AsciiEqual (offset, "TLGref"))
+                version = 2;
             else if (header.AsciiEqual (offset, "XXXYYY"))
             {
                 version = 5;
@@ -108,6 +110,9 @@ namespace GameRes.Formats.KiriKiri
         public override ImageData Read (IBinaryStream file, ImageMetaData info)
         {
             var meta = (TlgMetaData)info;
+
+            if (2 == meta.Version)
+                return ReadREF (file, meta);
 
             var image = ReadTlg (file, meta);
 
@@ -1537,6 +1542,46 @@ namespace GameRes.Formats.KiriKiri
                 BlendImage (image, info, slice, slice_info, 0);
             }
             return image;
+        }
+
+        ImageData ReadREF (IBinaryStream src, TlgMetaData info)
+        {
+            src.Position = info.DataOffset;
+            var qref = Array.Empty<byte> ();
+            while (true)
+            {
+                var entry_signature = src.ReadInt32 ();
+                var entry_size = src.ReadInt32 ();
+                if (0x46455251 == entry_signature) // 'QREF'
+                {
+                    if (entry_size < 16)
+                        throw new InvalidFormatException ();
+                    qref = src.ReadBytes (entry_size);
+                    if (qref.Length != entry_size)
+                        throw new EndOfStreamException ();
+                }
+                else if (0 == entry_signature && 0 == entry_size)
+                    break;
+                else
+                    throw new InvalidFormatException ();
+            }
+            if (0 == qref.Length)
+                throw new InvalidFormatException ();
+            var layer_index = qref.ToInt32 (4);
+            var name_length = qref.ToInt32 (12);
+            if (name_length < 2)
+                throw new InvalidFormatException ();
+            var name = Encoding.Unicode.GetString (qref, 16, name_length);
+            if (string.IsNullOrEmpty (name))
+                throw new InvalidFormatException ();
+            using (var ref_tlg = VFS.OpenBinaryStream (name))
+            {
+                var ref_meta = ReadMetaData (ref_tlg) as TlgMetaData;
+                if (1 != ref_meta.Version)
+                    throw new InvalidFormatException ();
+                ref_meta.LayerIndex = layer_index;
+                return Read (ref_tlg, ref_meta);
+            }
         }
     }
 
