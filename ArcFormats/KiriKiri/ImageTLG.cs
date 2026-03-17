@@ -1234,7 +1234,7 @@ namespace GameRes.Formats.KiriKiri
             public QoiDecodeStream (IBinaryStream input)
             {
                 m_input = input;
-                m_table = new byte[4*QoiCodec.HashTableSize];
+                m_table = new byte [4*QoiCodec.HashTableSize];
                 m_pixel = 0xFF000000;
             }
 
@@ -1329,7 +1329,7 @@ namespace GameRes.Formats.KiriKiri
                 m_qoi.Read (out var p1);
                 if (0 != p0 || 0xFF000000 != p1)
                     throw new InvalidFormatException ();
-                var r0 = m_run.Read();
+                var r0 = m_run.Read ();
                 if (0 != r0)
                     throw new InvalidFormatException ();
                 var dst = m_dst;
@@ -1515,7 +1515,7 @@ namespace GameRes.Formats.KiriKiri
                     throw new InvalidFormatException ();
             }
             var data_offset = src.Position;
-            var image = new byte[4*info.Width*info.Height];
+            var image = new byte [4*info.Width*info.Height];
             foreach (var slice_info in slices)
             {
                 src.Position = data_offset + slice_info.DataOffset;
