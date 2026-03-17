@@ -1097,86 +1097,27 @@ namespace GameRes.Formats.KiriKiri
             }
         }
 
-        static class QoiCodec
-        {
-            public const int Index = 0x00;
-            public const int Diff  = 0x40;
-            public const int Luma  = 0x80;
-            public const int Run   = 0xC0;
-            public const int Rgb   = 0xFE;
-            public const int Rgba  = 0xFF;
-            public const int Mask2 = 0xC0;
-            public const int HashTableSize = 64;
-        }
-
         byte[] DecodeQOI (IBinaryStream src, uint width, uint height)
         {
-            var output = new byte[4*width*height];
-            var table = new byte[4*QoiCodec.HashTableSize];
-            byte r = 0, g = 0, b = 0, a = 255;
+            var count = 4*width*height;
+            var output = new byte [count];
+            var qoi = new QoiDecodeStream (src);
+            uint pixel = 0;
             var run = 0;
-            for (var dst = 0; dst < output.Length; dst += 4)
+            var dst = 0;
+            while (dst < count)
             {
-                if (run > 0)
-                    run--;
+                if (run > 1)
+                    --run;
                 else
                 {
-                    var b1 = src.ReadByte ();
-                    if (-1 == b1)
-                        throw new EndOfStreamException ();
-                    if (QoiCodec.Rgb == b1)
-                    {
-                        var rgb = src.ReadInt24 ();
-                        r = (byte)rgb;
-                        g = (byte)(rgb >> 8);
-                        b = (byte)(rgb >> 16);
-                    }
-                    else if (QoiCodec.Rgba == b1)
-                    {
-                        var rgba = src.ReadInt32 ();
-                        r = (byte)rgba;
-                        g = (byte)(rgba >> 8);
-                        b = (byte)(rgba >> 16);
-                        a = (byte)(rgba >> 24);
-                    }
-                    else if (QoiCodec.Index == (b1 & QoiCodec.Mask2))
-                    {
-                        var p1 = (b1 & ~QoiCodec.Mask2) * 4;
-                        r = table[p1  ];
-                        g = table[p1+1];
-                        b = table[p1+2];
-                        a = table[p1+3];
-                    }
-                    else if (QoiCodec.Diff == (b1 & QoiCodec.Mask2))
-                    {
-                        r += (byte)(((b1 >> 4) & 0x03) - 2);
-                        g += (byte)(((b1 >> 2) & 0x03) - 2);
-                        b += (byte)((b1 & 0x03) - 2);
-                    }
-                    else if (QoiCodec.Luma == (b1 & QoiCodec.Mask2))
-                    {
-                        var b2 = src.ReadByte ();
-                        if (-1 == b2)
-                            throw new EndOfStreamException ();
-                        var vg = (b1 & 0x3F) - 32;
-                        r += (byte)(vg - 8 + ((b2 >> 4) & 0x0F));
-                        g += (byte)vg;
-                        b += (byte)(vg - 8 + (b2 & 0x0F));
-                    }
-                    else if (QoiCodec.Run == (b1 & QoiCodec.Mask2))
-                    {
-                        run = b1 & 0x3F;
-                    }
-                    var p2 = (r*3 + g*5 + b*7 + a*11) % QoiCodec.HashTableSize*4;
-                    table[p2  ] = r;
-                    table[p2+1] = g;
-                    table[p2+2] = b;
-                    table[p2+3] = a;
+                    run = qoi.Read (out pixel);
                 }
-                output[dst  ] = b;
-                output[dst+1] = g;
-                output[dst+2] = r;
-                output[dst+3] = a;
+                output[dst  ] = (byte)pixel;
+                output[dst+1] = (byte)(pixel >> 8);
+                output[dst+2] = (byte)(pixel >> 16);
+                output[dst+3] = (byte)(pixel >> 24);
+                dst += 4;
             }
             return output;
         }
@@ -1270,6 +1211,18 @@ namespace GameRes.Formats.KiriKiri
                 }
                 return value;
             }
+        }
+
+        static class QoiCodec
+        {
+            public const int Index = 0x00;
+            public const int Diff  = 0x40;
+            public const int Luma  = 0x80;
+            public const int Run   = 0xC0;
+            public const int Rgb   = 0xFE;
+            public const int Rgba  = 0xFF;
+            public const int Mask2 = 0xC0;
+            public const int HashTableSize = 64;
         }
 
         class QoiDecodeStream
