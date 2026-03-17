@@ -64,7 +64,7 @@ namespace GameRes.Formats.KiriKiri
                 return null;
 
             if (header.AsciiEqual ("TLGref\x00raw\x1a"))
-                return ReadTlgRefMetaData (header);
+                return ReadTlgRefMetaData (stream, header);
             if (header.AsciiEqual ("TLGqoi\x00raw\x1a"))
                 return ReadTlgQoiMetaData (header);
 
@@ -125,7 +125,7 @@ namespace GameRes.Formats.KiriKiri
             };
         }
 
-        TlgMetaData ReadTlgRefMetaData (CowArray<byte> header)
+        TlgMetaData ReadTlgRefMetaData (IBinaryStream stream, CowArray<byte> header)
         {
             if (header.Length < 0x2C)
                 return null;
@@ -141,12 +141,27 @@ namespace GameRes.Formats.KiriKiri
                 return null;
 
             string hidden_name = string.Empty;
-            if (name_bytes != 0 && header.Length >= 44 + name_bytes)
+            int need = 44 + name_bytes;
+
+            if (name_bytes != 0)
             {
-                var name_buf = new byte[name_bytes];
-                for (int i = 0; i < name_bytes; ++i)
-                    name_buf[i] = header[44 + i];
-                hidden_name = Encoding.Unicode.GetString(name_buf);
+                byte[] name_buf = new byte[name_bytes];
+
+                if (header.Length >= need)
+                {
+                    for (int i = 0; i < name_bytes; ++i)
+                        name_buf[i] = header[44 + i];
+                }
+                else
+                {
+                    long pos = stream.Position;
+                    stream.Position = 44;
+                    int read = stream.Read (name_buf, 0, name_bytes);
+                    stream.Position = pos;
+                    if (read != name_bytes)
+                        return null;
+                }
+                hidden_name = Encoding.Unicode.GetString (name_buf);
             }
 
             return new TlgMetaData
@@ -236,18 +251,11 @@ namespace GameRes.Formats.KiriKiri
             if (string.IsNullOrEmpty (meta.HiddenName))
                 throw new InvalidFormatException ("TLGref hidden file name is empty");
 
-            string hidden_name = meta.HiddenName;
-            string dir = "/" + VFS.GetDirectoryName (meta.FileName);
-            string candidate = string.IsNullOrEmpty (dir) ? hidden_name : VFS.CombinePath (dir, hidden_name);
-
-            Entry hidden_entry = null;
-
-            if (VFS.FileExists (candidate))
-                hidden_entry = VFS.FindFile (candidate);
-            else if (VFS.FileExists (hidden_name))
-                hidden_entry = VFS.FindFile (hidden_name);
+            Entry hidden_entry;
+            if (VFS.FileExists (meta.HiddenName))
+                hidden_entry = VFS.FindFile (meta.HiddenName);
             else
-                throw new FileNotFoundException ("Unable to locate referenced TLGqoi file.", candidate);
+                throw new FileNotFoundException ("Unable to locate referenced TLGqoi file.", meta.HiddenName);
 
             using (var hidden = VFS.OpenBinaryStream (hidden_entry))
             {
@@ -263,8 +271,8 @@ namespace GameRes.Formats.KiriKiri
 
                 var image_meta = new TlgMetaData
                 {
-                    Width    = meta.Width != 0 ? meta.Width : hidden_info.Width,
-                    Height   = meta.Height != 0 ? meta.Height : hidden_info.Height,
+                    Width    = meta.Width,
+                    Height   = meta.Height,
                     BPP      = 32,
                     FileName = meta.FileName,
                 };
