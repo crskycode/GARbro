@@ -1415,3 +1415,4 @@ xcopy "$(ProjectDir)\Resources\*" "$(TargetDir)\GameData\" /D /Y &gt;NUL</PostBu
   </Target>
   <Import Project="..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets')" />
 </Project>
+
