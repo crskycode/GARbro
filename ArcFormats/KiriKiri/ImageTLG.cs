@@ -1456,6 +1456,9 @@ namespace GameRes.Formats.KiriKiri
             if (0 == block_count)
                 throw new NotImplementedException ();
 
+            if (layer >= layer_count)
+                throw new ArgumentOutOfRangeException ();
+
             long[] dtbl = ReadArray (src, data_offset+dtbl_offset, 0x4C425444);
             if (0 == dtbl.Length || dtbl.Length != 1+2*block_count || dtbl[0] != dtbl.Length-1)
                 throw new InvalidFormatException ();
