@@ -1,0 +1,406 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AMIBaseArchive" xml:space="preserve">
+    <value>原壓縮檔案</value>
+  </data>
+  <data name="AMIBaseTooltip" xml:space="preserve">
+    <value>新的壓縮檔案將會包含原檔案中的項目。</value>
+  </data>
+  <data name="AMIChooseBase" xml:space="preserve">
+    <value>請選擇原壓縮檔案</value>
+  </data>
+  <data name="AMIDescription" xml:space="preserve">
+    <value>Amaterasu Translations Muv-Luv 壓縮檔案</value>
+  </data>
+  <data name="AMINoFiles" xml:space="preserve">
+    <value>未找到適合AMI壓縮檔案的項目。</value>
+  </data>
+  <data name="ArcEncryptedNotice" xml:space="preserve">
+    <value>壓縮檔案已加密。
+請選擇正確的加密方式。</value>
+  </data>
+  <data name="ArcNoEncryption" xml:space="preserve">
+    <value>沒有加密。</value>
+  </data>
+  <data name="ArcReset" xml:space="preserve">
+    <value>重置</value>
+  </data>
+  <data name="GRPDescription" xml:space="preserve">
+    <value>âge專用圖像格式</value>
+  </data>
+  <data name="GSCDescription" xml:space="preserve">
+    <value>Liar-soft專用腳本格式</value>
+  </data>
+  <data name="INTCreationNotice" xml:space="preserve">
+    <value>尚不支持創建加密壓縮檔案。</value>
+  </data>
+  <data name="INTDescription" xml:space="preserve">
+    <value>CatSystem2引擎壓縮檔案</value>
+  </data>
+  <data name="INTKeyRequirement" xml:space="preserve">
+    <value>密鑰是一個32位的16進制整數</value>
+  </data>
+  <data name="INTLabelNumericKey" xml:space="preserve">
+    <value>密鑰</value>
+  </data>
+  <data name="INTNotice" xml:space="preserve">
+    <value>壓縮檔案目錄已加密。</value>
+  </data>
+  <data name="KogadoDescription" xml:space="preserve">
+    <value>工畫堂引擎壓縮檔案</value>
+  </data>
+  <data name="LabelPassphrase" xml:space="preserve">
+    <value>密碼</value>
+  </data>
+  <data name="LabelScheme" xml:space="preserve">
+    <value>方式</value>
+  </data>
+  <data name="LWGDescription" xml:space="preserve">
+    <value>Liar-soft圖像檔案</value>
+  </data>
+  <data name="MsgAddingFile" xml:space="preserve">
+    <value>正在添加檔案……</value>
+  </data>
+  <data name="MsgCalculatingChecksum" xml:space="preserve">
+    <value>正在計算校驗和……</value>
+  </data>
+  <data name="MsgCompressingIndex" xml:space="preserve">
+    <value>正在壓縮索引……</value>
+  </data>
+  <data name="MsgCreationKeyRequired" xml:space="preserve">
+    <value>創建壓縮檔案需要密鑰。</value>
+  </data>
+  <data name="MsgEncNotImplemented" xml:space="preserve">
+    <value>加密方式暫不支持。</value>
+  </data>
+  <data name="MsgExtensionTooLong" xml:space="preserve">
+    <value>檔案擴展名太長。</value>
+  </data>
+  <data name="MsgFileNameTooLong" xml:space="preserve">
+    <value>檔案名太長。</value>
+  </data>
+  <data name="MsgIllegalCharacters" xml:space="preserve">
+    <value>檔案名中包含非法字符。</value>
+  </data>
+  <data name="MsgInvalidImageFormat" xml:space="preserve">
+    <value>{0}: 無法識別圖像格式。</value>
+  </data>
+  <data name="MsgInvalidVersion" xml:space="preserve">
+    <value>無效的檔案版本。</value>
+  </data>
+  <data name="MsgNoExtension" xml:space="preserve">
+    <value>檔案名需要包含擴展名。</value>
+  </data>
+  <data name="MsgTooManyFiles" xml:space="preserve">
+    <value>檔案數目超過壓縮檔案限制。</value>
+  </data>
+  <data name="MsgUpdatingIndex" xml:space="preserve">
+    <value>正在更新索引……</value>
+  </data>
+  <data name="MsgWritingIndex" xml:space="preserve">
+    <value>正在建立索引……</value>
+  </data>
+  <data name="NPACompressContents" xml:space="preserve">
+    <value>壓縮內容</value>
+  </data>
+  <data name="NPADescription" xml:space="preserve">
+    <value>Nitro+壓縮檔案</value>
+  </data>
+  <data name="NPAKeys" xml:space="preserve">
+    <value>密鑰
+（未加密內容仍需要）</value>
+  </data>
+  <data name="NPASteinsGateDescription" xml:space="preserve">
+    <value>Nitro+ Steins;Gate壓縮檔案</value>
+  </data>
+  <data name="NSADescription" xml:space="preserve">
+    <value>NScripter引擎壓縮檔案</value>
+  </data>
+  <data name="ONSArchiveType" xml:space="preserve">
+    <value>壓縮檔案類型</value>
+  </data>
+  <data name="ONSCompression" xml:space="preserve">
+    <value>壓縮方式</value>
+  </data>
+  <data name="ONSCompressionNone" xml:space="preserve">
+    <value>無</value>
+  </data>
+  <data name="PDDescription" xml:space="preserve">
+    <value>Flying Shine壓縮檔案</value>
+  </data>
+  <data name="PDScrambleContents" xml:space="preserve">
+    <value>打亂內容</value>
+  </data>
+  <data name="RPADescription" xml:space="preserve">
+    <value>Ren'Py引擎壓縮檔案</value>
+  </data>
+  <data name="RPALabelKey" xml:space="preserve">
+    <value>32位密鑰</value>
+  </data>
+  <data name="SCRDescription" xml:space="preserve">
+    <value>Amaterasu Translations Muv-Luv腳本檔案</value>
+  </data>
+  <data name="SGLabelEncoding" xml:space="preserve">
+    <value>檔案名編碼</value>
+  </data>
+  <data name="TooltipHex" xml:space="preserve">
+    <value>十六進制數</value>
+  </data>
+  <data name="WARCLabelLength" xml:space="preserve">
+    <value>檔案名最大長度
+（不包括擴展名）</value>
+  </data>
+  <data name="XFLDescription" xml:space="preserve">
+    <value>Liar-soft遊戲壓縮檔案</value>
+  </data>
+  <data name="XP3CompressContents" xml:space="preserve">
+    <value>壓縮內容</value>
+  </data>
+  <data name="XP3CompressHeader" xml:space="preserve">
+    <value>壓縮目錄</value>
+  </data>
+  <data name="XP3Description" xml:space="preserve">
+    <value>KiriKiri引擎壓縮檔案</value>
+  </data>
+  <data name="XP3LabelVersion" xml:space="preserve">
+    <value>版本</value>
+  </data>
+  <data name="XP3RetainStructure" xml:space="preserve">
+    <value>保持目錄結構</value>
+  </data>
+  <data name="YPFDescription" xml:space="preserve">
+    <value>Yu-Ris引擎壓縮檔案</value>
+  </data>
+  <data name="YPFLabelKey" xml:space="preserve">
+    <value>8位密鑰</value>
+  </data>
+  <data name="YPFLabelVersion" xml:space="preserve">
+    <value>壓縮檔案版本</value>
+  </data>
+  <data name="YPFNotice" xml:space="preserve">
+    <value>壓縮檔案的目錄已加密。
+請選擇正確的加密方式。</value>
+  </data>
+  <data name="LabelEncScheme" xml:space="preserve">
+    <value>加密方式</value>
+  </data>
+  <data name="DPKKeys" xml:space="preserve">
+    <value>密鑰</value>
+  </data>
+  <data name="ArcDefault" xml:space="preserve">
+    <value>預設</value>
+  </data>
+  <data name="ArcHex32Bit" xml:space="preserve">
+    <value>32位十六進制數</value>
+  </data>
+  <data name="KCAPDefault" xml:space="preserve">
+    <value>預設</value>
+  </data>
+  <data name="MBLNotice" xml:space="preserve">
+    <value>壓縮檔案包含已加密的腳本。
+請選擇加密方式或輸入密碼。</value>
+  </data>
+  <data name="ArcTitleOrPassword" xml:space="preserve">
+    <value>請選擇遊戲名稱或輸入密碼</value>
+  </data>
+  <data name="RPMEncryptedNotice" xml:space="preserve">
+    <value>檔案與RPM壓縮檔案格式相似，
+但無法猜測正確的密鑰。
+請選擇正確的加密方式。</value>
+  </data>
+  <data name="QLIEDefaultScheme" xml:space="preserve">
+    <value>使用預設加密方式</value>
+  </data>
+  <data name="INTChooseExe" xml:space="preserve">
+    <value>請選擇遊戲的EXE檔案</value>
+  </data>
+  <data name="INTExeButton" xml:space="preserve">
+    <value>檢查EXE</value>
+  </data>
+  <data name="INTExeFiles" xml:space="preserve">
+    <value>可執行檔案</value>
+  </data>
+  <data name="INTMessage1" xml:space="preserve">
+    <value>請按「檢查EXE」按鈕在遊戲程序檔案中尋找密鑰。</value>
+  </data>
+  <data name="INTMessage2" xml:space="preserve">
+    <value>或者，您也可以輸入壓縮檔案的密鑰或者選擇一個現成的加密方式。</value>
+  </data>
+  <data name="INTKeyNotFound" xml:space="preserve">
+    <value>在{0}當中沒有找到密鑰。</value>
+  </data>
+  <data name="ArcIgnoreEncryption" xml:space="preserve">
+    <value>忽略加密。</value>
+  </data>
+  <data name="ArcImageEncrypted" xml:space="preserve">
+    <value>圖像已加密。</value>
+  </data>
+  <data name="MCGChoose" xml:space="preserve">
+    <value>請選擇遊戲名稱或輸入密鑰</value>
+  </data>
+  <data name="MCGLabelKey" xml:space="preserve">
+    <value>8位加密密鑰</value>
+  </data>
+  <data name="MCAEncryptedNotice" xml:space="preserve">
+    <value>壓縮檔案的內容已被加密。</value>
+  </data>
+  <data name="YPFTryGuess" xml:space="preserve">
+    <value>嘗試猜測</value>
+  </data>
+  <data name="AGSMightBeEncrypted" xml:space="preserve">
+    <value>壓縮檔案可能被加密，選擇適當的加密方案。</value>
+  </data>
+  <data name="XP3EncryptedNotice" xml:space="preserve">
+    <value>壓縮檔案可能被加密，選擇適當的加密方案。</value>
+  </data>
+  <data name="GALChoose" xml:space="preserve">
+    <value>請選擇遊戲名稱或輸入密鑰</value>
+  </data>
+  <data name="GYUImageEncrypted" xml:space="preserve">
+    <value>圖像已加密。
+請選擇正確的加密方式。</value>
+  </data>
+  <data name="FJSYSNotice" xml:space="preserve">
+    <value>壓縮檔案包含已加密的腳本。
+請選擇加密方式或輸入密碼。</value>
+  </data>
+  <data name="RCTApplyMask" xml:space="preserve">
+    <value>從RC8位圖中加載透明度數據</value>
+  </data>
+  <data name="RCTOverlayFrames" xml:space="preserve">
+    <value>自動組合增量幀</value>
+  </data>
+  <data name="ZIPEncryptedNotice" xml:space="preserve">
+    <value>壓縮檔案的內容已被加密。</value>
+  </data>
+  <data name="OGGFixCrc" xml:space="preserve">
+    <value>修復Ogg檔案校驗和</value>
+  </data>
+  <data name="DefaultEncoding" xml:space="preserve">
+    <value>預設檔案名編碼</value>
+  </data>
+  <data name="ODNAudioSampleRate" xml:space="preserve">
+    <value>預設音頻採樣率</value>
+  </data>
+  <data name="Tim2AlphaFormat" xml:space="preserve">
+    <value>選擇Tim2圖片透明度格式。
+這無法從檔案中正確獲取。</value>
+  </data>
+</root>
