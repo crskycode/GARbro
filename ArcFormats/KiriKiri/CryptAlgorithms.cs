@@ -104,6 +104,22 @@ namespace GameRes.Formats.KiriKiri
             input.Read (header, 0, 5);
             uint signature = header.ToUInt32 (0);
             GuessEntryTypeBySignature (entry, signature);
+            if (0x46464952 == signature) // 'RIFF'
+            {
+                if (entry.UnpackedSize >= 12)
+                {
+                    var header_ext = new byte[12];
+                    Array.Copy (header, header_ext, header.Length);
+                    input.Read (header_ext, header.Length, header_ext.Length-header.Length);
+                    header = header_ext;
+                    if (header.AsciiEqual (8, "WAVE"))
+                        entry.Type = "audio";
+                    else if (header.AsciiEqual (8, "WEBP"))
+                        entry.Type = "image";
+                    else if (header.AsciiEqual (8, "AVI "))
+                        entry.Type = "video";
+                }
+            }
             if (0x184D2204 == signature) // LZ4 magic
             {
                 // assume no scripts are compressed using LZ4, return decompressed stream right away
