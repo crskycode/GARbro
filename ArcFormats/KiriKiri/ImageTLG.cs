@@ -25,6 +25,7 @@ namespace GameRes.Formats.KiriKiri
     {
         public int Version;
         public long DataOffset;
+        public int LayerIndex;
     }
 
     [Export(typeof(ImageFormat))]
@@ -1520,7 +1521,7 @@ namespace GameRes.Formats.KiriKiri
                     throw new InvalidFormatException ();
             }
             if (0 != qhdr.Length)
-                return DecodeMultiLayerQOI (src, info.Width, info.Height, qhdr, 0);
+                return DecodeMultiLayerQOI (src, info.Width, info.Height, qhdr, info.LayerIndex);
             return DecodeQOI (src, info.Width, info.Height);
         }
 
