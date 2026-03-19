@@ -1150,8 +1150,8 @@ namespace GameRes.Formats.KiriKiri
             {
                 if (m_input.Position == m_input.Length)
                     return false;
-                var v1 = m_input.ReadUInt16 ();
-                var v2 = m_input.ReadUInt16 ();
+                var v1 = m_input.ReadInt32 ();
+                var v2 = (int)((uint)v1 >> 16);
                 var input = m_input.ReadBytes (v2);
                 if (v2 != input.Length)
                     throw new EndOfStreamException ();
