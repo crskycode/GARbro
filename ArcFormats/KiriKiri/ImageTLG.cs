@@ -8,16 +8,16 @@
 // C# port by morkt
 //
 
-using System;
-using System.IO;
-using System.ComponentModel.Composition;
-using System.Windows.Media;
 using GameRes.Utility;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 using K4os.Compression.LZ4;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.Composition;
+using System.Diagnostics;
+using System.IO;
+using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace GameRes.Formats.KiriKiri
 {
