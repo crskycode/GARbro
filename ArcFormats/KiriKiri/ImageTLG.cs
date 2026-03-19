@@ -1433,9 +1433,9 @@ namespace GameRes.Formats.KiriKiri
 
             for (var i = 0; i < block_count; i++)
             {
-                var qoi_size   = (int) dtbl[1+2*i];
-                var run_size   = (int) rtbl[1+i];
                 var num_pixels = (int) dtbl[1+2*i+1];
+                var qoi_size   = (int) dtbl[1+2*i  ];
+                var run_size   = (int) rtbl[1+i];
 
                 src.Position = qoi_offset;
                 var qoi = src.ReadBytes (qoi_size);
