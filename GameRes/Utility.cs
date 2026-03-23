@@ -24,33 +24,45 @@
 //
 
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace GameRes.Utility
 {
     public static class Binary
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint BigEndian (uint u)
         {
             return u << 24 | (u & 0xff00) << 8 | (u & 0xff0000) >> 8 | u >> 24;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BigEndian (int i)
         {
             return (int)BigEndian ((uint)i);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort BigEndian (ushort u)
         {
             return (ushort)(u << 8 | u >> 8);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static short BigEndian (short i)
         {
             return (short)BigEndian ((ushort)i);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong BigEndian (ulong u)
         {
             return (ulong)BigEndian((uint)(u & 0xffffffff)) << 32
                  | (ulong)BigEndian((uint)(u >> 32));
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long BigEndian (long i)
         {
             return (long)BigEndian ((ulong)i);
@@ -123,36 +135,42 @@ namespace GameRes.Utility
             return GetCString (data, index, data.Length - index, Encodings.cp932);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint RotR (uint v, int count)
         {
             count &= 0x1F;
             return v >> count | v << (32-count);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint RotL (uint v, int count)
         {
             count &= 0x1F;
             return v << count | v >> (32-count);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong RotR (ulong v, int count)
         {
             count &= 0x3F;
             return v >> count | v << (64-count);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong RotL (ulong v, int count)
         {
             count &= 0x3F;
             return v << count | v >> (64-count);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte RotByteR (byte v, int count)
         {
             count &= 7;
             return (byte)(v >> count | v << (8-count));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte RotByteL (byte v, int count)
         {
             count &= 7;
