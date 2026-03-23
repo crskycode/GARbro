@@ -25,7 +25,6 @@
 
 using GameRes.Compression;
 using GameRes.Utility;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -54,14 +53,14 @@ namespace GameRes.Formats.KiriKiri
         public string  NamesFile;
         public Dictionary<string, HxIndexKey> IndexKeyDict;
 
-        public HxCrypt(CxScheme scheme) : base(scheme)
+        public HxCrypt (CxScheme scheme) : base (scheme)
         {
         }
 
         [NonSerialized]
         uint[] _lookup32 = null;
 
-        void CreateLookup32()
+        void CreateLookup32 ()
         {
             if (null != _lookup32)
                 return;
@@ -74,7 +73,7 @@ namespace GameRes.Formats.KiriKiri
             _lookup32 = result;
         }
 
-        string BinaryToString(byte[] data)
+        string BinaryToString (byte[] data)
         {
             if (data.Length == 0)
                 return string.Empty;
@@ -89,7 +88,7 @@ namespace GameRes.Formats.KiriKiri
             return new string(result);
         }
 
-        internal virtual Dictionary<string, HxEntry> ReadIndex(string arc_name, byte[] data)
+        internal virtual Dictionary<string, HxEntry> ReadIndex (string arc_name, byte[] data)
         {
             if (data.Length <= 20) // 16 + 4
                 return null;
@@ -124,8 +123,8 @@ namespace GameRes.Formats.KiriKiri
             if (null == root_obj)
                 return null;
             CreateLookup32 ();
-            var path_map = new Dictionary<string, string>();
-            var name_map = new Dictionary<string, string>();
+            var path_map = new Dictionary<string, string> ();
+            var name_map = new Dictionary<string, string> ();
             try
             {
                 FormatCatalog.Instance.ReadFileList (NamesFile, line => {
@@ -139,7 +138,7 @@ namespace GameRes.Formats.KiriKiri
                 });
             }
             catch (Exception) { }
-            var entry_info_map = new Dictionary<string, HxEntry>();
+            var entry_info_map = new Dictionary<string, HxEntry> ();
             for (var i = 0; i < root_obj.Length; i += 2)
             {
                 var path_hash = root_obj[i] as byte[];
@@ -181,7 +180,7 @@ namespace GameRes.Formats.KiriKiri
             return entry_info_map;
         }
 
-        internal virtual string GetUnicodeName(uint hash)
+        internal virtual string GetUnicodeName (uint hash)
         {
             var buf = new char[4];
             var i = 0;
@@ -196,7 +195,7 @@ namespace GameRes.Formats.KiriKiri
             return str;
         }
 
-        internal virtual HxFilterKey CreateFilterKey(ulong entry_key, ulong header_key_seed)
+        internal virtual HxFilterKey CreateFilterKey (ulong entry_key, ulong header_key_seed)
         {
             var result = new HxFilterKey
             {
@@ -209,16 +208,16 @@ namespace GameRes.Formats.KiriKiri
             uint key0 = (uint)(entry_key & 0xffffffff);
             uint key1 = (uint)((entry_key >> 32) & 0xffffffff);
 
-            var k0 = ExecuteXCode(key0);
+            var k0 = ExecuteXCode (key0);
             result.Key[0] = (ulong)k0.Item1 | ((ulong)k0.Item2 << 32);
-            var k1 = ExecuteXCode(key1);
+            var k1 = ExecuteXCode (key1);
             result.Key[1] = (ulong)k1.Item1 | ((ulong)k1.Item2 << 32);
 
             result.SplitPosition = (long)((this.m_offset + ((entry_key >> 16) & this.m_mask)) & 0xffffffff);
 
             /* create header key */
 
-            var k3 = ExecuteXCode((uint)header_key_seed);
+            var k3 = ExecuteXCode ((uint)header_key_seed);
             var v5 = (ulong)k3.Item1 | ((ulong)k3.Item2 << 32);
             v5 = ~v5;
 
@@ -227,7 +226,7 @@ namespace GameRes.Formats.KiriKiri
                 result.HeaderKey[i] = (byte)((v5 >> j) & 0xff);
             }
 
-            k3 = ExecuteXCode((uint)v5);
+            k3 = ExecuteXCode ((uint)v5);
             v5 = (ulong)k3.Item1 | ((ulong)k3.Item2 << 32);
             v5 = ~v5;
 
@@ -242,7 +241,7 @@ namespace GameRes.Formats.KiriKiri
             return result;
         }
 
-        internal virtual void CreateFilter(Xp3Entry entry)
+        internal virtual void CreateFilter (Xp3Entry entry)
         {
             var info = entry.Extra as HxEntry;
             if (null == info)
@@ -257,7 +256,7 @@ namespace GameRes.Formats.KiriKiri
             info.Filter = new HxFilter (key);
         }
 
-        public override void Init(ArcFile arc)
+        public override void Init (ArcFile arc)
         {
             return;
         }
@@ -271,7 +270,7 @@ namespace GameRes.Formats.KiriKiri
             return base.EntryReadFilter (entry, input);
         }
 
-        public override byte Decrypt(Xp3Entry entry, long offset, byte value)
+        public override byte Decrypt (Xp3Entry entry, long offset, byte value)
         {
             var info = entry.Extra as HxEntry;
             if (null == info)
@@ -286,7 +285,7 @@ namespace GameRes.Formats.KiriKiri
             return buf[0];
         }
 
-        public override void Decrypt(Xp3Entry entry, long offset, byte[] buffer, int pos, int count)
+        public override void Decrypt (Xp3Entry entry, long offset, byte[] buffer, int pos, int count)
         {
             var info = entry.Extra as HxEntry;
             if (null == info)
@@ -299,14 +298,14 @@ namespace GameRes.Formats.KiriKiri
             return;
         }
 
-        public override void Encrypt(Xp3Entry entry, long offset, byte[] values, int pos, int count)
+        public override void Encrypt (Xp3Entry entry, long offset, byte[] values, int pos, int count)
         {
             throw new NotImplementedException();
         }
 
-        internal override CxProgram NewProgram(uint seed)
+        internal override CxProgram NewProgram (uint seed)
         {
-            return new HxProgram(seed, ControlBlock, RandomType);
+            return new HxProgram (seed, ControlBlock, RandomType);
         }
     }
     
@@ -348,7 +347,7 @@ namespace GameRes.Formats.KiriKiri
         public long          Position;
         public HxBufferSpan  Data;
 
-        bool AdjustHeaderKey(HxHeaderKey key, HxHeaderKey new_key)
+        bool AdjustHeaderKey (HxHeaderKey key, HxHeaderKey new_key)
         {
             if (this.Data.Buffer == null)
                 return false;
@@ -382,11 +381,11 @@ namespace GameRes.Formats.KiriKiri
             return true;
         }
 
-        public void DecryptHeader(HxHeaderKey key)
+        public void DecryptHeader (HxHeaderKey key)
         {
-            var key2 = new HxHeaderKey();
+            var key2 = new HxHeaderKey ();
 
-            if (AdjustHeaderKey(key, key2))
+            if (AdjustHeaderKey (key, key2))
             {
                 for (uint i = 0; i < key2.Length; i++)
                 {
@@ -396,7 +395,7 @@ namespace GameRes.Formats.KiriKiri
             }
         }
 
-        public int Split(long split_position, HxFilterSpan[] sub_span)
+        public int Split (long split_position, HxFilterSpan[] sub_span)
         {
             if (this.Data.Buffer == null)
                 return 0;
@@ -445,7 +444,7 @@ namespace GameRes.Formats.KiriKiri
             }
         }
 
-        public void FirstDecrypt(uint key)
+        public void FirstDecrypt (uint key)
         {
             if (this.Data.Buffer == null)
                 return;
@@ -453,7 +452,7 @@ namespace GameRes.Formats.KiriKiri
             if (this.Data.Length == 0)
                 return;
 
-            var buf = BitConverter.GetBytes(key);
+            var buf = BitConverter.GetBytes (key);
 
             for (int i = 0; i < this.Data.Length; i++)
             {
@@ -469,7 +468,7 @@ namespace GameRes.Formats.KiriKiri
         private uint    FirstDecryptKey;
         private uint    DecryptKey;
 
-        public HxFilterSpanDecryptor(ulong key, bool flag)
+        public HxFilterSpanDecryptor (ulong key, bool flag)
         {
             this.DecryptKey = (uint)((key >> 8) & 0xFF);
             this.DecryptKey |= (uint)((key >> 8) & 0xFF00);
@@ -494,9 +493,9 @@ namespace GameRes.Formats.KiriKiri
             this.FirstDecryptKey *= 0x1010101;
         }
 
-        public void Decrypt(HxFilterSpan span)
+        public void Decrypt (HxFilterSpan span)
         {
-            span.FirstDecrypt(FirstDecryptKey);
+            span.FirstDecrypt (FirstDecryptKey);
 
             byte key1 = (byte)(this.DecryptKey & 0xFF);
             byte key2 = (byte)((this.DecryptKey >> 8) & 0xFF);
@@ -527,17 +526,17 @@ namespace GameRes.Formats.KiriKiri
         private long                     SplitPosition;
         private HxHeaderKey              HeaderKey;
 
-        public HxFilter(HxFilterKey key)
+        public HxFilter (HxFilterKey key)
         {
             this.Span = new HxFilterSpanDecryptor[2]
             {
-                new HxFilterSpanDecryptor(key.Key[0], key.Flag),
-                new HxFilterSpanDecryptor(key.Key[1], key.Flag),
+                new HxFilterSpanDecryptor (key.Key[0], key.Flag),
+                new HxFilterSpanDecryptor (key.Key[1], key.Flag),
             };
 
             this.SplitPosition = key.SplitPosition;
 
-            this.HeaderKey = new HxHeaderKey();
+            this.HeaderKey = new HxHeaderKey ();
 
             if (key.HasHeaderKey)
             {
@@ -546,7 +545,7 @@ namespace GameRes.Formats.KiriKiri
             }
         }
 
-        public void Decrypt(long position, byte[] buffer, int buffer_ptr, int length)
+        public void Decrypt (long position, byte[] buffer, int buffer_ptr, int length)
         {
             var span = new HxFilterSpan
             {
@@ -562,21 +561,21 @@ namespace GameRes.Formats.KiriKiri
 
             if (span.Position < this.HeaderKey.Position + this.HeaderKey.Length)
             {
-                span.DecryptHeader(this.HeaderKey);
+                span.DecryptHeader (this.HeaderKey);
             }
 
             var sub_span = new HxFilterSpan[2];
 
-            var flags = span.Split(this.SplitPosition, sub_span);
+            var flags = span.Split (this.SplitPosition, sub_span);
 
             if ((flags & 1) != 0)
             {
-                this.Span[0].Decrypt(sub_span[0]);
+                this.Span[0].Decrypt (sub_span[0]);
             }
 
             if ((flags & 2) != 0)
             {
-                this.Span[1].Decrypt(sub_span[1]);
+                this.Span[1].Decrypt (sub_span[1]);
             }
         }
     }
@@ -585,12 +584,12 @@ namespace GameRes.Formats.KiriKiri
     {
         private ulong m_seed;
 
-        public HxSplittableRandom(ulong seed)
+        public HxSplittableRandom (ulong seed)
         {
             m_seed = seed;
         }
 
-        public ulong Next()
+        public ulong Next ()
         {
             ulong z;
 
@@ -620,7 +619,7 @@ namespace GameRes.Formats.KiriKiri
         readonly int m_random_method;
         new readonly M64[] m_seed;
 
-        public HxProgram(uint seed, uint[] control_block, int random_method) : base(seed, control_block)
+        public HxProgram (uint seed, uint[] control_block, int random_method) : base(seed, control_block)
         {
             m_random_method = random_method;
             m_seed = new M64[2];
@@ -630,19 +629,19 @@ namespace GameRes.Formats.KiriKiri
 
             var r = new HxSplittableRandom(s);
 
-            m_seed[0].u64 = r.Next();
-            m_seed[1].u64 = r.Next();
+            m_seed[0].u64 = r.Next ();
+            m_seed[1].u64 = r.Next ();
         }
 
-        ulong GetOldRandom()
+        ulong GetOldRandom ()
         {
             /* These codes only work correctly in little endian mode! */
 
-            var a = new M64();
-            var b = new M64();
-            var c = new M64();
-            var d = new M64();
-            var e = new M64();
+            var a = new M64 ();
+            var b = new M64 ();
+            var c = new M64 ();
+            var d = new M64 ();
+            var e = new M64 ();
 
             ulong t;
 
@@ -678,14 +677,14 @@ namespace GameRes.Formats.KiriKiri
             return t;
         }
 
-        ulong GetNewRandom()
+        ulong GetNewRandom ()
         {
             /* These codes only work correctly in little endian mode! */
 
-            var a = new M64();
-            var b = new M64();
-            var c = new M64();
-            var d = new M64();
+            var a = new M64 ();
+            var b = new M64 ();
+            var c = new M64 ();
+            var d = new M64 ();
 
             ulong t;
 
@@ -721,12 +720,12 @@ namespace GameRes.Formats.KiriKiri
             return t;
         }
 
-        public override uint GetRandom()
+        public override uint GetRandom ()
         {
             if (0 == m_random_method)
-                return (uint)GetOldRandom();
+                return (uint) GetOldRandom ();
             else
-                return (uint)GetNewRandom();
+                return (uint) GetNewRandom ();
         }
     }
 
@@ -743,9 +742,9 @@ namespace GameRes.Formats.KiriKiri
 
         readonly State m_state;
 
-        public HxChachaDecryptor(byte[] key, byte[] nonce, uint[] seed)
+        public HxChachaDecryptor (byte[] key, byte[] nonce, uint[] seed)
         {
-            m_state = new State();
+            m_state = new State ();
 
             var constant = Encoding.ASCII.GetBytes ("expand 32-byte k");
 
@@ -757,91 +756,91 @@ namespace GameRes.Formats.KiriKiri
             Array.Copy (nonce, 0, m_state.Data, 56, 8);
         }
 
-        void TransformState(State src, State dst)
+        void TransformState (State src, State dst)
         {
             uint z0, z1, z2, z3, z4, z5, z6, z7,
                 z8, z9, za, zb, zc, zd, ze, zf;
 
-            z0 = LittleEndian.ToUInt32(src.Data, 0);
-            z1 = LittleEndian.ToUInt32(src.Data, 4);
-            z2 = LittleEndian.ToUInt32(src.Data, 8);
-            z3 = LittleEndian.ToUInt32(src.Data, 12);
-            z4 = LittleEndian.ToUInt32(src.Data, 16);
-            z5 = LittleEndian.ToUInt32(src.Data, 20);
-            z6 = LittleEndian.ToUInt32(src.Data, 24);
-            z7 = LittleEndian.ToUInt32(src.Data, 28);
-            z8 = LittleEndian.ToUInt32(src.Data, 32);
-            z9 = LittleEndian.ToUInt32(src.Data, 36);
-            za = LittleEndian.ToUInt32(src.Data, 40);
-            zb = LittleEndian.ToUInt32(src.Data, 44);
-            zc = LittleEndian.ToUInt32(src.Data, 48);
-            zd = LittleEndian.ToUInt32(src.Data, 52);
-            ze = LittleEndian.ToUInt32(src.Data, 56);
-            zf = LittleEndian.ToUInt32(src.Data, 60);
+            z0 = LittleEndian.ToUInt32 (src.Data, 0);
+            z1 = LittleEndian.ToUInt32 (src.Data, 4);
+            z2 = LittleEndian.ToUInt32 (src.Data, 8);
+            z3 = LittleEndian.ToUInt32 (src.Data, 12);
+            z4 = LittleEndian.ToUInt32 (src.Data, 16);
+            z5 = LittleEndian.ToUInt32 (src.Data, 20);
+            z6 = LittleEndian.ToUInt32 (src.Data, 24);
+            z7 = LittleEndian.ToUInt32 (src.Data, 28);
+            z8 = LittleEndian.ToUInt32 (src.Data, 32);
+            z9 = LittleEndian.ToUInt32 (src.Data, 36);
+            za = LittleEndian.ToUInt32 (src.Data, 40);
+            zb = LittleEndian.ToUInt32 (src.Data, 44);
+            zc = LittleEndian.ToUInt32 (src.Data, 48);
+            zd = LittleEndian.ToUInt32 (src.Data, 52);
+            ze = LittleEndian.ToUInt32 (src.Data, 56);
+            zf = LittleEndian.ToUInt32 (src.Data, 60);
 
             for (int i = 0; i < 10; i++)
             {
                 // QUARTER(z0, z4, z8, zc);
-                z0 += z4; zc = Binary.RotL(zc ^ z0, 16);
-                z8 += zc; z4 = Binary.RotL(z4 ^ z8, 12);
-                z0 += z4; zc = Binary.RotL(zc ^ z0, 8);
-                z8 += zc; z4 = Binary.RotL(z4 ^ z8, 7);
+                z0 += z4; zc = Binary.RotL (zc ^ z0, 16);
+                z8 += zc; z4 = Binary.RotL (z4 ^ z8, 12);
+                z0 += z4; zc = Binary.RotL (zc ^ z0, 8);
+                z8 += zc; z4 = Binary.RotL (z4 ^ z8, 7);
                 // QUARTER(z1, z5, z9, zd);
-                z1 += z5; zd = Binary.RotL(zd ^ z1, 16);
-                z9 += zd; z5 = Binary.RotL(z5 ^ z9, 12);
-                z1 += z5; zd = Binary.RotL(zd ^ z1, 8);
-                z9 += zd; z5 = Binary.RotL(z5 ^ z9, 7);
+                z1 += z5; zd = Binary.RotL (zd ^ z1, 16);
+                z9 += zd; z5 = Binary.RotL (z5 ^ z9, 12);
+                z1 += z5; zd = Binary.RotL (zd ^ z1, 8);
+                z9 += zd; z5 = Binary.RotL (z5 ^ z9, 7);
                 // QUARTER(z2, z6, za, ze);
-                z2 += z6; ze = Binary.RotL(ze ^ z2, 16);
-                za += ze; z6 = Binary.RotL(z6 ^ za, 12);
-                z2 += z6; ze = Binary.RotL(ze ^ z2, 8);
-                za += ze; z6 = Binary.RotL(z6 ^ za, 7);
+                z2 += z6; ze = Binary.RotL (ze ^ z2, 16);
+                za += ze; z6 = Binary.RotL (z6 ^ za, 12);
+                z2 += z6; ze = Binary.RotL (ze ^ z2, 8);
+                za += ze; z6 = Binary.RotL (z6 ^ za, 7);
                 // QUARTER(z3, z7, zb, zf);
-                z3 += z7; zf = Binary.RotL(zf ^ z3, 16);
-                zb += zf; z7 = Binary.RotL(z7 ^ zb, 12);
-                z3 += z7; zf = Binary.RotL(zf ^ z3, 8);
-                zb += zf; z7 = Binary.RotL(z7 ^ zb, 7);
+                z3 += z7; zf = Binary.RotL (zf ^ z3, 16);
+                zb += zf; z7 = Binary.RotL (z7 ^ zb, 12);
+                z3 += z7; zf = Binary.RotL (zf ^ z3, 8);
+                zb += zf; z7 = Binary.RotL (z7 ^ zb, 7);
                 // QUARTER(z0, z5, za, zf);
-                z0 += z5; zf = Binary.RotL(zf ^ z0, 16);
-                za += zf; z5 = Binary.RotL(z5 ^ za, 12);
-                z0 += z5; zf = Binary.RotL(zf ^ z0, 8);
-                za += zf; z5 = Binary.RotL(z5 ^ za, 7);
+                z0 += z5; zf = Binary.RotL (zf ^ z0, 16);
+                za += zf; z5 = Binary.RotL (z5 ^ za, 12);
+                z0 += z5; zf = Binary.RotL (zf ^ z0, 8);
+                za += zf; z5 = Binary.RotL (z5 ^ za, 7);
                 // QUARTER(z1, z6, zb, zc);
-                z1 += z6; zc = Binary.RotL(zc ^ z1, 16);
-                zb += zc; z6 = Binary.RotL(z6 ^ zb, 12);
-                z1 += z6; zc = Binary.RotL(zc ^ z1, 8);
-                zb += zc; z6 = Binary.RotL(z6 ^ zb, 7);
+                z1 += z6; zc = Binary.RotL (zc ^ z1, 16);
+                zb += zc; z6 = Binary.RotL (z6 ^ zb, 12);
+                z1 += z6; zc = Binary.RotL (zc ^ z1, 8);
+                zb += zc; z6 = Binary.RotL (z6 ^ zb, 7);
                 // QUARTER(z2, z7, z8, zd);
-                z2 += z7; zd = Binary.RotL(zd ^ z2, 16);
-                z8 += zd; z7 = Binary.RotL(z7 ^ z8, 12);
-                z2 += z7; zd = Binary.RotL(zd ^ z2, 8);
-                z8 += zd; z7 = Binary.RotL(z7 ^ z8, 7);
+                z2 += z7; zd = Binary.RotL (zd ^ z2, 16);
+                z8 += zd; z7 = Binary.RotL (z7 ^ z8, 12);
+                z2 += z7; zd = Binary.RotL (zd ^ z2, 8);
+                z8 += zd; z7 = Binary.RotL (z7 ^ z8, 7);
                 // QUARTER(z3, z4, z9, ze);
-                z3 += z4; ze = Binary.RotL(ze ^ z3, 16);
-                z9 += ze; z4 = Binary.RotL(z4 ^ z9, 12);
-                z3 += z4; ze = Binary.RotL(ze ^ z3, 8);
-                z9 += ze; z4 = Binary.RotL(z4 ^ z9, 7);
+                z3 += z4; ze = Binary.RotL (ze ^ z3, 16);
+                z9 += ze; z4 = Binary.RotL (z4 ^ z9, 12);
+                z3 += z4; ze = Binary.RotL (ze ^ z3, 8);
+                z9 += ze; z4 = Binary.RotL (z4 ^ z9, 7);
             }
 
-            LittleEndian.Pack(z0, dst.Data, 0);
-            LittleEndian.Pack(z1, dst.Data, 4);
-            LittleEndian.Pack(z2, dst.Data, 8);
-            LittleEndian.Pack(z3, dst.Data, 12);
-            LittleEndian.Pack(z4, dst.Data, 16);
-            LittleEndian.Pack(z5, dst.Data, 20);
-            LittleEndian.Pack(z6, dst.Data, 24);
-            LittleEndian.Pack(z7, dst.Data, 28);
-            LittleEndian.Pack(z8, dst.Data, 32);
-            LittleEndian.Pack(z9, dst.Data, 36);
-            LittleEndian.Pack(za, dst.Data, 40);
-            LittleEndian.Pack(zb, dst.Data, 44);
-            LittleEndian.Pack(zc, dst.Data, 48);
-            LittleEndian.Pack(zd, dst.Data, 52);
-            LittleEndian.Pack(ze, dst.Data, 56);
-            LittleEndian.Pack(zf, dst.Data, 60);
+            LittleEndian.Pack (z0, dst.Data, 0);
+            LittleEndian.Pack (z1, dst.Data, 4);
+            LittleEndian.Pack (z2, dst.Data, 8);
+            LittleEndian.Pack (z3, dst.Data, 12);
+            LittleEndian.Pack (z4, dst.Data, 16);
+            LittleEndian.Pack (z5, dst.Data, 20);
+            LittleEndian.Pack (z6, dst.Data, 24);
+            LittleEndian.Pack (z7, dst.Data, 28);
+            LittleEndian.Pack (z8, dst.Data, 32);
+            LittleEndian.Pack (z9, dst.Data, 36);
+            LittleEndian.Pack (za, dst.Data, 40);
+            LittleEndian.Pack (zb, dst.Data, 44);
+            LittleEndian.Pack (zc, dst.Data, 48);
+            LittleEndian.Pack (zd, dst.Data, 52);
+            LittleEndian.Pack (ze, dst.Data, 56);
+            LittleEndian.Pack (zf, dst.Data, 60);
         }
 
-        public void Decrypt(byte[] input, int input_pos, byte[] output, int output_pos, int length)
+        public void Decrypt (byte[] input, int input_pos, byte[] output, int output_pos, int length)
         {
             var state = new State ();
             var num_block = length / 64;
@@ -895,19 +894,19 @@ namespace GameRes.Formats.KiriKiri
 
     internal class HxIndexDeserializer
     {
-        public static object Deserialize(Stream stream)
+        public static object Deserialize (Stream stream)
         {
-            using (var reader = new BinaryReader(stream, Encoding.ASCII, true))
+            using (var reader = new BinaryReader (stream, Encoding.ASCII, true))
             {
-                var obj = ReadObject(reader);
-                Debug.Assert(stream.Position == stream.Length);
+                var obj = ReadObject (reader);
+                Debug.Assert (stream.Position == stream.Length);
                 return obj;
             }
         }
 
-        static object ReadObject(BinaryReader reader)
+        static object ReadObject (BinaryReader reader)
         {
-            var type = reader.ReadByte();
+            var type = reader.ReadByte ();
 
             switch (type)
             {
@@ -921,88 +920,88 @@ namespace GameRes.Formats.KiriKiri
                 }
                 case 0x02:
                 {
-                    return ReadString(reader);
+                    return ReadString (reader);
                 }
                 case 0x03:
                 {
-                    return ReadByteArray(reader);
+                    return ReadByteArray (reader);
                 }
                 case 0x04:
                 {
-                    return ReadInt64(reader);
+                    return ReadInt64 (reader);
                 }
                 case 0x05:
                 {
-                    return ReadInt64(reader);
+                    return ReadInt64 (reader);
                 }
                 case 0x81:
                 {
-                    return ReadArray(reader);
+                    return ReadArray (reader);
                 }
                 case 0xC1:
                 {
-                    return ReadDictionary(reader);
+                    return ReadDictionary (reader);
                 }
                 default:
                 {
-                    throw new Exception("unknown object type");
+                    throw new Exception ("unknown object type");
                 }
             }
         }
 
-        static object ReadByteArray(BinaryReader reader)
+        static object ReadByteArray (BinaryReader reader)
         {
-            var count = ReadInt32(reader);
-            var array = reader.ReadBytes(count);
+            var count = ReadInt32 (reader);
+            var array = reader.ReadBytes (count);
             return array;
         }
 
-        static object ReadArray(BinaryReader reader)
+        static object ReadArray (BinaryReader reader)
         {
-            var count = ReadInt32(reader);
+            var count = ReadInt32 (reader);
 
-            var array = new List<object>(count);
+            var array = new List<object> (count);
 
             for (int i = 0; i < count; i++)
             {
-                var obj = ReadObject(reader);
-                array.Add(obj);
+                var obj = ReadObject (reader);
+                array.Add (obj);
             }
 
-            return array.ToArray();
+            return array.ToArray ();
         }
 
-        static object ReadDictionary(BinaryReader reader)
+        static object ReadDictionary (BinaryReader reader)
         {
-            var count = ReadInt32(reader);
+            var count = ReadInt32 (reader);
 
-            var dictionary = new Dictionary<string, object>(count);
+            var dictionary = new Dictionary<string, object> (count);
 
             for (int i = 0; i < count; i++)
             {
-                var name = ReadString(reader);
-                var obj = ReadObject(reader);
-                dictionary.Add(name, obj);
+                var name = ReadString (reader);
+                var obj = ReadObject (reader);
+                dictionary.Add (name, obj);
             }
 
             return dictionary;
         }
 
-        static int ReadInt32(BinaryReader reader)
+        static int ReadInt32 (BinaryReader reader)
         {
-            return Binary.BigEndian(reader.ReadInt32());
+            return Binary.BigEndian (reader.ReadInt32 ());
         }
 
-        static long ReadInt64(BinaryReader reader)
+        static long ReadInt64 (BinaryReader reader)
         {
-            return Binary.BigEndian(reader.ReadInt64());
+            return Binary.BigEndian (reader.ReadInt64 ());
         }
 
-        static string ReadString(BinaryReader reader)
+        static string ReadString (BinaryReader reader)
         {
-            var length = ReadInt32(reader);
-            var buffer = reader.ReadBytes(sizeof(short) * length);
-            return Encoding.Unicode.GetString(buffer);
+            var length = ReadInt32 (reader);
+            var buffer = reader.ReadBytes (sizeof(short) * length);
+            return Encoding.Unicode.GetString (buffer);
         }
     }
 }
