@@ -72,6 +72,7 @@ namespace GameRes.Formats.KiriKiri
                 dir.Add (new TlgLayerEntry
                 {
                     Name = string.Format ("{0}#{1:D3}.tlg", Path.GetFileNameWithoutExtension (file.Name), i),
+                    Offset = 0,
                     Size = (uint)file.MaxOffset,
                     Type = "image",
                     Index = i,
