@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
@@ -1177,6 +1178,7 @@ namespace GameRes.Formats.KiriKiri
                 return true;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int ReadByte ()
             {
                 if (m_pos == m_size[m_index])
