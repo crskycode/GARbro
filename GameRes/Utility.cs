@@ -180,21 +180,25 @@ namespace GameRes.Utility
 
     public static class BigEndian
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort ToUInt16<TArray> (TArray value, int index) where TArray : IList<byte>
         {
             return (ushort)(value[index] << 8 | value[index+1]);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static short ToInt16<TArray> (TArray value, int index) where TArray : IList<byte>
         {
             return (short)(value[index] << 8 | value[index+1]);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint ToUInt32<TArray> (TArray value, int index) where TArray : IList<byte>
         {
             return (uint)(value[index] << 24 | value[index+1] << 16 | value[index+2] << 8 | value[index+3]);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ToInt32<TArray> (TArray value, int index) where TArray : IList<byte>
         {
             return (int)ToUInt32 (value, index);
@@ -224,12 +228,14 @@ namespace GameRes.Utility
             return (int)ToUInt32 (value, index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Pack (ushort value, byte[] buf, int index)
         {
             buf[index]   = (byte)(value >> 8);
             buf[index+1] = (byte)(value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Pack (uint value, byte[] buf, int index)
         {
             buf[index]   = (byte)(value >> 24);
@@ -238,22 +244,26 @@ namespace GameRes.Utility
             buf[index+3] = (byte)(value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Pack (ulong value, byte[] buf, int index)
         {
             Pack ((uint)(value >> 32), buf, index);
             Pack ((uint)value, buf, index+4);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Pack (short value, byte[] buf, int index)
         {
             Pack ((ushort)value, buf, index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Pack (int value, byte[] buf, int index)
         {
             Pack ((uint)value, buf, index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Pack (long value, byte[] buf, int index)
         {
             Pack ((ulong)value, buf, index);
@@ -262,31 +272,37 @@ namespace GameRes.Utility
 
     public static class LittleEndian
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort ToUInt16<TArray> (TArray value, int index) where TArray : IList<byte>
         {
             return (ushort)(value[index] | value[index+1] << 8);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static short ToInt16<TArray> (TArray value, int index) where TArray : IList<byte>
         {
             return (short)(value[index] | value[index+1] << 8);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint ToUInt32<TArray> (TArray value, int index) where TArray : IList<byte>
         {
             return (uint)(value[index] | value[index+1] << 8 | value[index+2] << 16 | value[index+3] << 24);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ToInt32<TArray> (TArray value, int index) where TArray : IList<byte>
         {
             return (int)ToUInt32 (value, index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong ToUInt64<TArray> (TArray value, int index) where TArray : IList<byte>
         {
             return (ulong)ToUInt32 (value, index) | ((ulong)ToUInt32 (value, index+4) << 32);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long ToInt64<TArray> (TArray value, int index) where TArray : IList<byte>
         {
             return (long)ToUInt64 (value, index);
@@ -328,12 +344,14 @@ namespace GameRes.Utility
             return (long)ToUInt64 (value, index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Pack (ushort value, byte[] buf, int index)
         {
             buf[index]   = (byte)(value);
             buf[index+1] = (byte)(value >> 8);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Pack (uint value, byte[] buf, int index)
         {
             buf[index]   = (byte)(value);
@@ -342,22 +360,26 @@ namespace GameRes.Utility
             buf[index+3] = (byte)(value >> 24);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Pack (ulong value, byte[] buf, int index)
         {
             Pack ((uint)value, buf, index);
             Pack ((uint)(value >> 32), buf, index+4);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Pack (short value, byte[] buf, int index)
         {
             Pack ((ushort)value, buf, index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Pack (int value, byte[] buf, int index)
         {
             Pack ((uint)value, buf, index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Pack (long value, byte[] buf, int index)
         {
             Pack ((ulong)value, buf, index);
