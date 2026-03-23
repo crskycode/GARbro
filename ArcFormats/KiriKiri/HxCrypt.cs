@@ -25,6 +25,7 @@
 
 using GameRes.Compression;
 using GameRes.Utility;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -261,15 +262,20 @@ namespace GameRes.Formats.KiriKiri
             return;
         }
 
+        public override Stream EntryReadFilter (Xp3Entry entry, Stream input)
+        {
+            var info = entry.Extra as HxEntry;
+            if (null == info)
+                return base.EntryReadFilter (entry, input);
+            CreateFilter (entry);
+            return base.EntryReadFilter (entry, input);
+        }
+
         public override byte Decrypt(Xp3Entry entry, long offset, byte value)
         {
-            if (entry.Extra == null)
-                return value;
             var info = entry.Extra as HxEntry;
             if (null == info)
                 return value;
-            if (null == info.Filter)
-                CreateFilter (entry);
             if (null == info.Filter)
                 return value;
 
@@ -282,13 +288,9 @@ namespace GameRes.Formats.KiriKiri
 
         public override void Decrypt(Xp3Entry entry, long offset, byte[] buffer, int pos, int count)
         {
-            if (entry.Extra == null)
-                return;
             var info = entry.Extra as HxEntry;
             if (null == info)
                 return;
-            if (null == info.Filter)
-                CreateFilter (entry);
             if (null == info.Filter)
                 return;
 
