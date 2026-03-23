@@ -292,6 +292,42 @@ namespace GameRes.Utility
             return (long)ToUInt64 (value, index);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort ToUInt16 (byte[] value, int index)
+        {
+            return (ushort)(value[index] | value[index+1] << 8);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short ToInt16 (byte[] value, int index)
+        {
+            return (short)(value[index] | value[index+1] << 8);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint ToUInt32 (byte[] value, int index)
+        {
+            return (uint)(value[index] | value[index+1] << 8 | value[index+2] << 16 | value[index+3] << 24);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int ToInt32 (byte[] value, int index)
+        {
+            return (int)ToUInt32 (value, index);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong ToUInt64 (byte[] value, int index)
+        {
+            return (ulong)ToUInt32 (value, index) | ((ulong)ToUInt32 (value, index+4) << 32);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long ToInt64 (byte[] value, int index)
+        {
+            return (long)ToUInt64 (value, index);
+        }
+
         public static void Pack (ushort value, byte[] buf, int index)
         {
             buf[index]   = (byte)(value);
