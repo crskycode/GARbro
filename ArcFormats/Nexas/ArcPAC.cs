@@ -268,11 +268,14 @@ namespace GameRes.Formats.NeXAS
                 return input;
             if (Compression.NeedDecryptionOnly == pac.PackType)
             {
-                var data = new byte[entry.Size];
-                input.Read (data, 0, data.Length);
-                for (int i = 0; i < Math.Min (3, data.Length); i++)
-                    data[i] = (byte)~data[i];
-                return new BinMemoryStream (data, entry.Name);
+                using (input)
+                {
+                    var data = new byte[entry.Size];
+                    input.Read (data, 0, data.Length);
+                    for (int i = 0; i < Math.Min (3, data.Length); i++)
+                        data[i] = (byte)~data[i];
+                    return new BinMemoryStream (data, entry.Name);
+                }
             }
             if (null == pent || !pent.IsPacked)
                 return input;
@@ -296,8 +299,11 @@ namespace GameRes.Formats.NeXAS
             case Compression.Zstd:
             case Compression.ZstdOrNone:
             {
-                var unpacked = ZstdDecompress (input, pent.UnpackedSize);
-                return new BinMemoryStream (unpacked, entry.Name);
+                using (input)
+                {
+                    var unpacked = ZstdDecompress (input, pent.UnpackedSize);
+                    return new BinMemoryStream (unpacked, entry.Name);
+                }
             }
             default:
                 return input;
