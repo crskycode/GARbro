@@ -318,9 +318,12 @@ namespace GameRes.Formats.NeXAS
                 var dst = new byte[unpackedSize];
                 int decompressedSize = 0;
 
-                while(decompressedSize < unpackedSize) 
+                while (decompressedSize < unpackedSize) 
                 {
-                    decompressedSize += ds.Read(dst, decompressedSize, (int)unpackedSize - decompressedSize);
+                    var count = ds.Read (dst, decompressedSize, (int)unpackedSize-decompressedSize);
+                    if (0 == count)
+                        return dst;
+                    decompressedSize += count;
                 }
 
                 return dst;
