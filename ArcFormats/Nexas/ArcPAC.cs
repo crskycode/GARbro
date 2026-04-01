@@ -139,15 +139,15 @@ namespace GameRes.Formats.NeXAS
                 bool success = false;
                 try
                 {
-                    success = ReadOld();
+                    success = ReadV0();
                 }
                 catch { /* ignore parse errors */ }
-                if (!success && !ReadNew())
+                if (!success && !ReadV1())
                     return null;
                 return m_dir;
             }
 
-            bool ReadNew ()
+            bool ReadV1 ()
             {
                 uint index_size = m_file.View.ReadUInt32 (m_file.MaxOffset-4);
                 int unpacked_size = m_count*0x4C;
@@ -163,7 +163,7 @@ namespace GameRes.Formats.NeXAS
                     return ReadFromStream (input, 0x40);
             }
 
-            bool ReadOld ()
+            bool ReadV0 ()
             {
                 using (var input = m_file.CreateStream())
                 {
