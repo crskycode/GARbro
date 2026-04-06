@@ -2,6 +2,9 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:p="clr-namespace:GameRes.Formats.Properties">
+    <TextBox Name="SearchBox" Width="250" HorizontalAlignment="Left" Margin="0,0,0,5"
+         TextChanged="SearchBox_TextChanged"
+         ToolTip="输入以筛选标题（不区分大小写）"/>
     <ComboBox Name="Title" Width="250" ItemsSource="{Binding}"
               SelectedValue="{Binding Source={x:Static p:Settings.Default}, Path=BELLTitle, Mode=TwoWay}"/>
 </StackPanel>

@@ -124,7 +124,17 @@ namespace GameRes.Formats.DxLib
 
         public override object GetAccessWidget()
         {
-            return new GUI.WidgetDXA();
+            //return new GUI.WidgetDXA();
+            var widget = new GUI.WidgetDXA();
+
+            var items = KnownKeys
+                .Where(x => x != null && !string.IsNullOrWhiteSpace(x.Password))
+                .Select((x, i) => new KeyValuePair<string, string>(x.Password,
+                    x.Password))
+                .ToList();
+
+            widget.SetKnownPasswords(items);
+            return widget;
         }
 
         public override ArcFile TryOpen (ArcView file)

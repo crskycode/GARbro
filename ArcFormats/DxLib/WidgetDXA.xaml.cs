@@ -25,5 +25,20 @@ namespace GameRes.Formats.GUI
         {
             InitializeComponent();
         }
+        public void SetKnownPasswords(IEnumerable<KeyValuePair<string, string>> items)
+        {
+            if (items == null)
+            {
+                DataContext = null;
+                return;
+            }
+
+            DataContext = items
+                .Where(x => !string.IsNullOrWhiteSpace(x.Value))
+                .GroupBy(x => x.Value) // 同密码去重
+                .Select(g => g.First())
+                .OrderBy(x => x.Key)
+                .ToList();
+        }
     }
 }

@@ -8,6 +8,9 @@
     <StackPanel.Resources>
         <local:ClassNameConverter x:Key="ClassNameConverter" />
     </StackPanel.Resources>
+    <TextBox Name="SearchBox" Width="180" HorizontalAlignment="Left" Margin="0,0,0,5"
+             TextChanged="SearchBox_TextChanged"
+             ToolTip="输入以筛选方案（不区分大小写）"/>
     <ComboBox Name="Scheme" Width="180" ItemsSource="{Binding}" HorizontalAlignment="Left"
               DisplayMemberPath="Key" SelectedValuePath="Key"
               SelectedValue="{Binding Source={x:Static p:Settings.Default}, Path=XP3Scheme, Mode=TwoWay}"/>
