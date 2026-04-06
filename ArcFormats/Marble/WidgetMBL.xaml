@@ -12,10 +12,10 @@
     <TextBox Name="SearchBox" Grid.Row="0" Width="180" HorizontalAlignment="Right" Margin="0,3,0,0"
          TextChanged="SearchBox_TextChanged"
          ToolTip="输入以筛选加密方案（不区分大小写）"/>
-    <ComboBox Name="EncScheme" Grid.Row="0" Margin="0,3,0,0" Width="180" HorizontalAlignment="Right"
+    <ComboBox Name="EncScheme" Grid.Row="1" Margin="0,3,0,0" Width="180" HorizontalAlignment="Right"
               ItemsSource="{Binding}"
               DisplayMemberPath="Key" SelectedValuePath="Value"
               SelectedValue="{Binding ElementName=PassPhrase, Path=Text, Mode=TwoWay}"/>
-    <TextBox Name="PassPhrase" Grid.Row="1" Margin="0,3,0,3" Width="{Binding ElementName=EncScheme, Path=ActualWidth}" HorizontalAlignment="Right"
+    <TextBox Name="PassPhrase" Grid.Row="2" Margin="0,3,0,3" Width="{Binding ElementName=EncScheme, Path=ActualWidth}" HorizontalAlignment="Right"
              Text="{Binding Source={x:Static p:Settings.Default}, Path=MBLPassPhrase, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 </Grid>
