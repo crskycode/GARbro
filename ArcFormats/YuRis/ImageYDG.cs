@@ -174,11 +174,11 @@ namespace GameRes.Formats.YuRis
 
         byte[] DecodeWebP (byte[] data, out int width, out int height)
         {
-            LibWebPLoader.Load ();
+            WebPCodec.Load ();
 
             width = 0;
             height = 0;
-            if (1 != WebPGetInfo (data, (UIntPtr)data.Length, ref width, ref height))
+            if (1 != WebPCodec.WebPGetInfo(data, (UIntPtr)data.Length, ref width, ref height))
                 throw new InvalidFormatException ("WebP image decoder failed.");
 
             int stride = width * 4;
@@ -186,7 +186,7 @@ namespace GameRes.Formats.YuRis
             var handle = GCHandle.Alloc (output, GCHandleType.Pinned);
             try
             {
-                if (IntPtr.Zero == WebPDecodeBGRAInto (data, (UIntPtr)data.Length,
+                if (IntPtr.Zero == WebPCodec.WebPDecodeBGRAInto (data, (UIntPtr)data.Length,
                     handle.AddrOfPinnedObject (), (UIntPtr)output.Length, stride))
                 {
                     throw new InvalidFormatException ("WebP image decoder failed.");
@@ -323,37 +323,6 @@ namespace GameRes.Formats.YuRis
                 output = (uint)(b | (g << 8) | (r << 16) | (a << 24));
                 return run;
             }
-        }
-
-        [DllImport("libwebp.dll", EntryPoint = "WebPGetInfo", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int WebPGetInfo([MarshalAs(UnmanagedType.LPArray)] byte[] data, UIntPtr data_size, ref int width, ref int height);
-
-        [DllImport("libwebp.dll", EntryPoint = "WebPDecodeBGRAInto", CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr WebPDecodeBGRAInto([MarshalAs(UnmanagedType.LPArray)] byte[] data, UIntPtr data_size, IntPtr output_buffer, UIntPtr output_buffer_size, int output_stride);
-    }
-
-    internal static class LibWebPLoader
-    {
-        [DllImport("kernel32.dll", SetLastError = true, CallingConvention = CallingConvention.StdCall)]
-        static extern IntPtr LoadLibraryEx(string lpFileName, IntPtr hReservedNull, uint dwFlags);
-
-        static bool loaded = false;
-
-        const uint LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR = 0x00000100;
-        const uint LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
-
-        public static void Load()
-        {
-            if (loaded)
-                return;
-            var folder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            folder = Path.Combine(folder, (IntPtr.Size == 4) ? "x86" : "x64");
-            var fullPath = Path.Combine(folder, "libwebp.dll");
-            fullPath = Path.GetFullPath(fullPath);
-            var handle = LoadLibraryEx(fullPath, IntPtr.Zero, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
-            if (IntPtr.Zero == handle)
-                throw new Win32Exception(Marshal.GetLastWin32Error());
-            loaded = true;
         }
     }
 }

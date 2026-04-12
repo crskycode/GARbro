@@ -278,6 +278,7 @@
     <Compile Include="VnMaker\AudioMP3.cs" />
     <Compile Include="VnMaker\AudioOGG.cs" />
     <Compile Include="VnMaker\ImagePNG.cs" />
+    <Compile Include="WebPCodec.cs" />
     <Compile Include="Xuse\ArcNT.cs" />
     <Compile Include="Xuse\ArcWVB.cs" />
     <Compile Include="YuRis\ImageYDG.cs" />
