@@ -164,6 +164,11 @@ namespace GameRes.Formats.KiriKiri
 
         public override void Decrypt (Xp3Entry entry, long offset, byte[] buffer, int pos, int count)
         {
+            CxDecryptCore (entry, offset, buffer, pos, count);
+        }
+
+        protected void CxDecryptCore (Xp3Entry entry, long offset, byte[] buffer, int pos, int count)
+        {
             uint key = entry.Hash;
             uint base_offset = GetBaseOffset (key);
             if (offset < base_offset)
@@ -204,7 +209,7 @@ namespace GameRes.Formats.KiriKiri
 
         public override void Encrypt (Xp3Entry entry, long offset, byte[] values, int pos, int count)
         {
-            Decrypt (entry, offset, values, pos, count);
+            CxDecryptCore (entry, offset, values, pos, count);
         }
 
         protected Tuple<uint, uint> ExecuteXCode (uint hash)
