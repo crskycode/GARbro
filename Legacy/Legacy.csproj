@@ -182,7 +182,9 @@
     <Compile Include="Paprika\ImageNP.cs" />
     <Compile Include="Pearl\ArcARY.cs" />
     <Compile Include="Pearl\ImagePL4.cs" />
+    <Compile Include="PenguinWorks\ArcDAT.cs" />
     <Compile Include="PenguinWorks\ArcPAC.cs" />
+    <Compile Include="PenguinWorks\ImagePXL.cs" />
     <Compile Include="Pias\ArcDAT.cs" />
     <Compile Include="PineSoft\ArcCMB.cs" />
     <Compile Include="PineSoft\ArcVoice.cs" />
@@ -203,6 +205,7 @@
     <Compile Include="Rina\ImageRAD.cs" />
     <Compile Include="RSystem\ArcRAD.cs" />
     <Compile Include="RSystem\ImageRSG.cs" />
+    <Compile Include="Ruri\ArcKBM.cs" />
     <Compile Include="Brownie\ArcNAF.cs" />
     <Compile Include="Brownie\AudioWAV.cs" />
     <Compile Include="Discovery\ArcDAT.cs" />
