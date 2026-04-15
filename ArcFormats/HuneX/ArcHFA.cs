@@ -39,7 +39,7 @@ namespace GameRes.Formats.HuneX {
 
         public HfaOpener() {
             Extensions = new string[] { "hfa" };
-            ContainedFormats = new[] { "BGI", "CompressedBG", "BW", "SCR" };
+            ContainedFormats = new[] { "BGI", "CompressedBG_MT", "BW", "SCR" };
         }
 
         public override ArcFile TryOpen(ArcView file) {

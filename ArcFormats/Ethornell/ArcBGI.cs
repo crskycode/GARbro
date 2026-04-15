@@ -157,6 +157,8 @@ namespace GameRes.Formats.BGI
                     entry.Type = res.Type;
                 else if (file.View.AsciiEqual (entry.Offset, "BSE 1."))
                     entry.Type = "image";
+                else if (file.View.AsciiEqual (entry.Offset, "CompressedBG"))
+                    entry.Type = "image";
                 else if (file.View.AsciiEqual (entry.Offset+5, "w  "))
                     entry.Type = "audio";
             }

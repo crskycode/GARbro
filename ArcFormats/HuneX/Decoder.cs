@@ -30,25 +30,25 @@ using System.IO;
 using System.Linq;
 
 namespace GameRes.Formats.HuneX {
-    internal class HuffmanNode {
-        public int Weight;
-        public int Index;
-        public HuffmanNode Parent;
-        public HuffmanNode Child0;
-        public HuffmanNode Child1;
-    }
+    internal class HuffmanTree {
+        internal class HuffmanNode {
+            public int Weight;
+            public int Index;
+            public HuffmanNode Parent;
+            public HuffmanNode Child0;
+            public HuffmanNode Child1;
+        }
 
-    internal sealed class HuffmanTree {
         List<HuffmanNode> m_table;
         bool m_invert;
 
-        public HuffmanTree(int first_real_entry, Dictionary<int, int> weights, bool invert = false) {
-            m_table = new List<HuffmanNode>(first_real_entry);
+        public HuffmanTree(int[] weights, bool invert = false) {
+            m_table = new List<HuffmanNode>(weights.Length);
 
-            for (int i = 0; i < first_real_entry; i++) {
+            for (int i = 0; i < weights.Length; i++) {
                 m_table.Add(new HuffmanNode {
                     Index = i,
-                    Weight = weights.TryGetValue(i, out int w) ? w : 0
+                    Weight = weights[i]
                 });
             }
 
@@ -84,7 +84,7 @@ namespace GameRes.Formats.HuneX {
             }
         }
 
-        public int DecodeSequence(MsbBitStream input) {
+        public int DecodeSequence(IBitStream input) {
             HuffmanNode node = m_table[m_table.Count - 1];
 
             while (node.Child0 != null || node.Child1 != null) {
@@ -138,7 +138,7 @@ namespace GameRes.Formats.HuneX {
             int fill_entries = ReadIntVL(index_bytes);
             if (fill_entries == 0)
                 fill_entries = first_real_entry;
-            var weights = new Dictionary<int, int>();
+            var weights = new int[first_real_entry]; // idk why this can work xD
             if (first_real_entry * 4 < (index_bits + 4) * fill_entries) {
                 fill_entries = first_real_entry;
                 for (int i = 0; i < fill_entries; i++) {
@@ -151,7 +151,7 @@ namespace GameRes.Formats.HuneX {
                     weights[idx] = ReadIntVL();
                 }
             }
-            var tree = new HuffmanTree(first_real_entry, weights, true);
+            var tree = new HuffmanTree(weights, true);
             tree.Build(((first_real_entry + 1) * first_real_entry) >> 1);
             using (var input = new MsbBitStream(m_input, true)) {
                 while (offset < m_unpacked.Length) {
@@ -186,6 +186,101 @@ namespace GameRes.Formats.HuneX {
             var buffer = new byte[Math.Max(sizeof(int), length)];
             m_input.Read(buffer, 0, length);
             return BitConverter.ToInt32(buffer, 0);
+        }
+    }
+
+    internal class RingBuffer<T> {
+       private readonly T[] m_buffer;
+       private int m_head;
+       private int m_tail;
+       private int m_count;
+
+       public T this[int index] { get { return m_buffer[index]; } }
+
+       public RingBuffer(int capacity) {
+           m_buffer = new T[capacity];
+       }
+
+       public void Append(T item) {
+           m_buffer[m_head] = item;
+           m_head = (m_head + 1) % m_buffer.Length;
+           if (m_count == m_buffer.Length)
+               m_tail = (m_tail + 1) % m_buffer.Length;
+           else
+               m_count++;
+       }
+
+       public void Append(T[] items) {
+           foreach (T item in items)
+               Append(item);
+       }
+    }
+
+    internal sealed class MzxDecoder {
+        Stream m_input;
+        byte[] m_unpacked;
+
+        public MzxDecoder(byte[] buffer) {
+            m_unpacked = new byte[BitConverter.ToUInt32(buffer, 0)];
+            m_input = new MemoryStream(buffer.Skip(4).ToArray());
+        }
+
+        public byte[] Unpack() {
+            int offset = 0;
+            int counter = 0;
+            var ringbuf = new RingBuffer<byte>(128);
+            while (offset < m_unpacked.Length) {
+                if (counter <= 0)
+                    counter = 0x1000;
+                byte flag = (byte)m_input.ReadByte();
+                int len = flag >> 2;
+                var buffer = new byte[2];
+                switch (flag & 3) {
+                    case 0: // RLE
+                        if (counter != 0x1000) {
+                            buffer[1] = m_unpacked[offset - 1];
+                            buffer[0] = m_unpacked[offset - 2];
+                        }
+                        offset = Write2(buffer, offset, len + 1);
+                        break;
+                    case 1: // BACKREF
+                        int k = m_input.ReadByte() * 2 + 2;
+                        buffer = new byte[len * 2 + 2];
+                        int pos = offset - k;
+                        k = Math.Min(k, buffer.Length);
+                        Buffer.BlockCopy(m_unpacked, pos, buffer, 0, k);
+                        for (pos = k; pos < buffer.Length; pos += k) {
+                            Buffer.BlockCopy(buffer, 0, buffer, pos, Math.Min(k, buffer.Length - pos));
+                        }
+                        offset = Write2(buffer, offset, 1);
+                        break;
+                    case 2: // RINGBUF
+                        buffer[0] = ringbuf[len * 2];
+                        buffer[1] = ringbuf[len * 2 + 1];
+                        offset = Write2(buffer, offset, 1);
+                        counter += len;
+                        break;
+                    case 3: // LITERAL
+                        buffer = new byte[len * 2 + 2];
+                        m_input.Read(buffer, 0, buffer.Length);
+                        offset = Write2(buffer, offset, 1);
+                        ringbuf.Append(buffer);
+                        break;
+                }
+                counter -= len + 1;
+            }
+            return m_unpacked;
+        }
+
+        int Write2(byte[] buffer, int offset, int count) {
+            for (int i = 0; i < count; i++) {
+                int bytesToWrite = Math.Min(buffer.Length, m_unpacked.Length - offset);
+                if (bytesToWrite <= 0)
+                    break;
+                Buffer.BlockCopy(buffer, 0, m_unpacked, offset, bytesToWrite);
+                offset += bytesToWrite;
+            }
+            return offset;
         }
     }
 }
