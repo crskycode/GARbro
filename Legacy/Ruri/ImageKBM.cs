@@ -1,6 +1,6 @@
-//! \file       ImagePXL.cs
-//! \date       2026-04-14
-//! \brief      Penguin Works image format.
+//! \file       ImageKBM.cs
+//! \date       2026-04-16
+//! \brief      Ruri System image format.
 //
 // Copyright (C) 2026 by morkt
 //
@@ -23,39 +23,36 @@
 // IN THE SOFTWARE.
 //
 
+using System;
 using System.ComponentModel.Composition;
 using System.IO;
-using System.Windows.Media;
 
-namespace GameRes.Formats.PenguinWorks {
+namespace GameRes.Formats.Ruri {
     [Export(typeof(ImageFormat))]
-    public class PxlFormat : ImageFormat {
-        public override string         Tag { get { return "PXL"; } }
-        public override string Description { get { return "Penguin Works image format"; } }
+    public class KbmFormat : ImageFormat {
+        public override string         Tag { get { return "KBM"; } }
+        public override string Description { get { return "Ruri System image format"; } }
         public override uint     Signature { get { return 0; } }
+        public override bool      CanWrite { get { return false; } }
 
-        public override ImageMetaData ReadMetaData(IBinaryStream file) {
-            uint width = file.ReadUInt32();
-            uint height = file.ReadUInt32();
-            if (file.Length != 8 + 3 * width * height)
-                return null;
-            return new ImageMetaData {
-                Width  = width,
-                Height = height,
-                BPP    = 24,
-            };
+        public KbmFormat() {
+            Extensions = new string[] { "Kbm" };
         }
 
-        public override ImageData Read(IBinaryStream file, ImageMetaData info) {
-            file.Position = 8;
-            int stride = info.iWidth * 3;
-            var pixels = new byte[stride * info.iHeight];
-            file.Read(pixels, 0, pixels.Length);
-            return ImageData.CreateFlipped(info, PixelFormats.Bgr24, null, pixels, stride);
+        public override ImageMetaData ReadMetaData(IBinaryStream stream) {
+            if ((stream.Signature & 0xFFFFFF) != 0x4D424B)
+                return null;
+            stream = BinaryStream.FromStream(new StreamRegion(stream.AsStream, 0x100), stream.Name);
+            return Bmp.ReadMetaData(stream);
+        }
+
+        public override ImageData Read(IBinaryStream stream, ImageMetaData info) {
+            stream = BinaryStream.FromStream(new StreamRegion(stream.AsStream, 0x100), stream.Name);
+            return Bmp.Read(stream, info);
         }
 
         public override void Write(Stream file, ImageData image) {
-            throw new System.NotImplementedException("PxlFormat.Write not implemented");
+            throw new NotImplementedException("KbmFormat.Write not implemented");
         }
     }
 }

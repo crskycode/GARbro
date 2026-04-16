@@ -206,6 +206,7 @@
     <Compile Include="RSystem\ArcRAD.cs" />
     <Compile Include="RSystem\ImageRSG.cs" />
     <Compile Include="Ruri\ArcKBM.cs" />
+    <Compile Include="Ruri\ImageKBM.cs" />
     <Compile Include="Brownie\ArcNAF.cs" />
     <Compile Include="Brownie\AudioWAV.cs" />
     <Compile Include="Discovery\ArcDAT.cs" />
