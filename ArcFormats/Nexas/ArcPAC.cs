@@ -81,7 +81,7 @@ namespace GameRes.Formats.NeXAS
             Settings = new[] { PacEncoding };
         }
 
-        EncodingSetting PacEncoding = new EncodingSetting ("NexasEncodingCP", "DefaultEncoding");
+        readonly EncodingSetting PacEncoding = new EncodingSetting ("NexasEncodingCP", "DefaultEncoding");
 
         public override ArcFile TryOpen (ArcView file)
         {
@@ -89,17 +89,17 @@ namespace GameRes.Formats.NeXAS
                 return null;
 
             List<Entry> dir = null;
-            INexasIndexReader reader = new IndexReader (file, PacEncoding.Get<Encoding>());
+            INexasIndexReader reader = new IndexReaderV1 (file, PacEncoding.Get<Encoding> ());
             try
             {
-                dir = reader.Read();
+                dir = reader.Read ();
             }
             catch {}
 
             if (null == dir)
             {
-                reader = new OldIndexReader (file);
-                dir = reader.Read();
+                reader = new IndexReaderV0 (file);
+                dir = reader.Read ();
 
                 if (null == dir)
                     return null;
@@ -110,18 +110,18 @@ namespace GameRes.Formats.NeXAS
             return new PacArchive (file, this, dir, reader.PackType);
         }
 
-        internal sealed class IndexReader : INexasIndexReader
+        internal sealed class IndexReaderV1 : INexasIndexReader
         {
-            ArcView     m_file;
-            int         m_count;
-            int         m_pack_type;
-            Encoding    m_encoding;
+            readonly ArcView    m_file;
+            readonly int        m_count;
+            readonly int        m_pack_type;
+            readonly Encoding   m_encoding;
 
             const int MaxNameLength = 0x40;
 
             public Compression PackType { get { return (Compression)m_pack_type; } }
 
-            public IndexReader (ArcView file, Encoding enc)
+            public IndexReaderV1 (ArcView file, Encoding enc)
             {
                 m_file = file;
                 m_count = file.View.ReadInt32 (4);
@@ -139,15 +139,15 @@ namespace GameRes.Formats.NeXAS
                 bool success = false;
                 try
                 {
-                    success = ReadOld();
+                    success = ReadV0 ();
                 }
                 catch { /* ignore parse errors */ }
-                if (!success && !ReadNew())
+                if (!success && !ReadV1 ())
                     return null;
                 return m_dir;
             }
 
-            bool ReadNew ()
+            bool ReadV1 ()
             {
                 uint index_size = m_file.View.ReadUInt32 (m_file.MaxOffset-4);
                 int unpacked_size = m_count*0x4C;
@@ -163,9 +163,9 @@ namespace GameRes.Formats.NeXAS
                     return ReadFromStream (input, 0x40);
             }
 
-            bool ReadOld ()
+            bool ReadV0 ()
             {
-                using (var input = m_file.CreateStream())
+                using (var input = m_file.CreateStream ())
                 {
                     input.Position = 0xC;
                     if (ReadFromStream (input, 0x20))
@@ -177,16 +177,16 @@ namespace GameRes.Formats.NeXAS
 
             bool ReadFromStream (IBinaryStream index, int name_length)
             {
-                m_dir.Clear();
+                m_dir.Clear ();
                 for (int i = 0; i < m_count; ++i)
                 {
                     var name = index.ReadCString (name_length, m_encoding);
                     if (string.IsNullOrWhiteSpace (name))
                         return false;
                     var entry = FormatCatalog.Instance.Create<PackedEntry> (name);
-                    entry.Offset        = index.ReadUInt32();
-                    entry.UnpackedSize  = index.ReadUInt32();
-                    entry.Size          = index.ReadUInt32();
+                    entry.Offset        = index.ReadUInt32 ();
+                    entry.UnpackedSize  = index.ReadUInt32 ();
+                    entry.Size          = index.ReadUInt32 ();
                     if (!entry.CheckPlacement (m_file.MaxOffset))
                         return false;
                     switch (m_pack_type)
@@ -212,14 +212,14 @@ namespace GameRes.Formats.NeXAS
             }
         }
 
-        internal sealed class OldIndexReader : INexasIndexReader
+        internal sealed class IndexReaderV0 : INexasIndexReader
         {
-            ArcView     m_file;
-            uint        m_header_size;
+            readonly ArcView m_file;
+            readonly uint    m_header_size;
 
             public Compression PackType { get { return Compression.NeedDecryptionOnly; } }
 
-            public OldIndexReader (ArcView file)
+            public IndexReaderV0 (ArcView file)
             {
                 m_file = file;
                 m_header_size = file.View.ReadUInt32 (3);
@@ -230,25 +230,25 @@ namespace GameRes.Formats.NeXAS
             public List<Entry> Read ()
             {
                 m_dir = new List<Entry> ();
-                using (var input = m_file.CreateStream())
+                using (var input = m_file.CreateStream ())
                 {
                     input.Position = 7;
                     while (input.Position < m_header_size)
                     {
                         byte c;
-                        List<byte> name_buffer = new List<byte>();
+                        List<byte> name_buffer = new List<byte> ();
                         while (true)
                         {
-                            c = (byte)input.ReadByte();
+                            c = (byte)input.ReadByte ();
                             if (c == 0) break;
                             name_buffer.Add ((byte)~c);
                         }
-                        var name = Binary.GetCString (name_buffer.ToArray(), 0);
+                        var name = Binary.GetCString (name_buffer.ToArray (), 0);
                         if (string.IsNullOrWhiteSpace (name))
                             return null;
                         var entry = FormatCatalog.Instance.Create<Entry> (name);
-                        entry.Offset     = input.ReadUInt32() + m_header_size;
-                        entry.Size       = input.ReadUInt32();
+                        entry.Offset = input.ReadUInt32 () + m_header_size;
+                        entry.Size   = input.ReadUInt32 ();
                         if (!entry.CheckPlacement (m_file.MaxOffset))
                             return null;
                         m_dir.Add (entry);
@@ -268,11 +268,14 @@ namespace GameRes.Formats.NeXAS
                 return input;
             if (Compression.NeedDecryptionOnly == pac.PackType)
             {
-                var data = new byte[entry.Size];
-                input.Read (data, 0, data.Length);
-                for (int i = 0; i < Math.Min (3, data.Length); i++)
-                    data[i] = (byte)~data[i];
-                return new BinMemoryStream (data, entry.Name);
+                using (input)
+                {
+                    var data = new byte[entry.Size];
+                    input.Read (data, 0, data.Length);
+                    for (int i = 0; i < Math.Min (3, data.Length); i++)
+                        data[i] = (byte)~data[i];
+                    return new BinMemoryStream (data, entry.Name);
+                }
             }
             if (null == pent || !pent.IsPacked)
                 return input;
@@ -296,8 +299,11 @@ namespace GameRes.Formats.NeXAS
             case Compression.Zstd:
             case Compression.ZstdOrNone:
             {
-                var unpacked = ZstdDecompress (input, pent.UnpackedSize);
-                return new BinMemoryStream (unpacked, entry.Name);
+                using (input)
+                {
+                    var unpacked = ZstdDecompress (input, pent.UnpackedSize);
+                    return new BinMemoryStream (unpacked, entry.Name);
+                }
             }
             default:
                 return input;
@@ -308,15 +314,24 @@ namespace GameRes.Formats.NeXAS
         {
             var dst = new byte[unpacked_size];
             var decoder = new HuffmanDecoder (packed, dst);
-            return decoder.Unpack();
+            return decoder.Unpack ();
         }
 
         static private byte[] ZstdDecompress (Stream s, uint unpackedSize)
         {
-            using (var ds = new ZstdNet.DecompressionStream (s))
+            using (var ds = new ZstdSharp.DecompressionStream (s))
             {
                 var dst = new byte[unpackedSize];
-                ds.Read (dst, 0, dst.Length);
+                int decompressedSize = 0;
+
+                while (decompressedSize < unpackedSize) 
+                {
+                    var count = ds.Read (dst, decompressedSize, (int)unpackedSize-decompressedSize);
+                    if (0 == count)
+                        return dst;
+                    decompressedSize += count;
+                }
+
                 return dst;
             }
         }

@@ -65,10 +65,10 @@ namespace GameRes.Formats.Artemis
                         data[j] -= (byte)(0x77 * j);
                     var slice_width = 0;
                     var slice_height = 0;
-                    if (1 != WebPGetInfo (data, (UIntPtr)data.Length, ref slice_width, ref slice_height))
+                    if (1 != WebPCodec.WebPGetInfo(data, (UIntPtr)data.Length, ref slice_width, ref slice_height))
                         throw new InvalidFormatException("WebP image decoder failed.");
                     var slice_size = stride * slice_height;
-                    if (IntPtr.Zero == WebPDecodeBGRAInto (data, (UIntPtr)data.Length, output, (UIntPtr)slice_size, stride))
+                    if (IntPtr.Zero == WebPCodec.WebPDecodeBGRAInto (data, (UIntPtr)data.Length, output, (UIntPtr)slice_size, stride))
                         throw new InvalidFormatException("WebP image decoder failed.");
                     output += slice_size;
                 }
@@ -94,7 +94,7 @@ namespace GameRes.Formats.Artemis
                 offset[i] = file.ReadInt32();
             for (var i = 0; i < 8; i++)
                 length[i] = file.ReadInt32();
-            LibWebPLoader.Load();
+            WebPCodec.Load();
             var image_width = 0;
             var image_height = 0;
             for (var i = 0; i < 8; i++)
@@ -111,7 +111,7 @@ namespace GameRes.Formats.Artemis
                     webp_header[j] -= (byte)(0x77 * j);
                 var slice_width = 0;
                 var slice_height = 0;
-                if (1 != WebPGetInfo (webp_header, (UIntPtr)webp_header.Length, ref slice_width, ref slice_height))
+                if (1 != WebPCodec.WebPGetInfo (webp_header, (UIntPtr)webp_header.Length, ref slice_width, ref slice_height))
                     throw new InvalidFormatException ("WebP image decoder failed.");
                 image_width = Math.Max (image_width, slice_width);
                 image_height += slice_height;
@@ -129,37 +129,6 @@ namespace GameRes.Formats.Artemis
         public override void Write (Stream file, ImageData bitmap)
         {
             throw new NotImplementedException("ImageNekoPNG.Write not implemented");
-        }
-
-        [DllImport("libwebp.dll", EntryPoint = "WebPGetInfo", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int WebPGetInfo ([MarshalAs(UnmanagedType.LPArray)] byte[] data, UIntPtr data_size, ref int width, ref int height);
-
-        [DllImport("libwebp.dll", EntryPoint = "WebPDecodeBGRAInto", CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr WebPDecodeBGRAInto ([MarshalAs(UnmanagedType.LPArray)] byte[] data, UIntPtr data_size, IntPtr output_buffer, UIntPtr output_buffer_size, int output_stride);
-    }
-
-    internal static class LibWebPLoader
-    {
-        [DllImport("kernel32.dll", SetLastError = true, CallingConvention = CallingConvention.StdCall)]
-        static extern IntPtr LoadLibraryEx (string lpFileName, IntPtr hReservedNull, uint dwFlags);
-
-        static bool loaded = false;
-
-        const uint LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR = 0x00000100;
-        const uint LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
-
-        public static void Load ()
-        {
-            if (loaded)
-                return;
-            var folder = Path.GetDirectoryName (Assembly.GetExecutingAssembly().Location);
-            folder = Path.Combine (folder, (IntPtr.Size == 4) ? "x86" : "x64");
-            var fullPath = Path.Combine (folder, "libwebp.dll");
-            fullPath = Path.GetFullPath (fullPath);
-            var handle = LoadLibraryEx (fullPath, IntPtr.Zero, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
-            if (IntPtr.Zero == handle)
-                throw new Win32Exception (Marshal.GetLastWin32Error());
-            loaded = true;
         }
     }
 }

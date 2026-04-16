@@ -364,7 +364,7 @@ namespace GameRes
             {
                 var scheme = format.Scheme;
                 if (null != scheme)
-                    db.SchemeMap[format.Tag] = scheme;
+                    db.SchemeMap.Add (format.Tag, scheme);
             }
             SerializeScheme (output, db);
         }

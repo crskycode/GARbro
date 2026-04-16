@@ -31,7 +31,6 @@ using System.ComponentModel.Composition;
 using GameRes.Compression;
 using GameRes.Formats.Strings;
 using GameRes.Utility;
-using Snappy;
 
 namespace GameRes.Formats.YuRis
 {
@@ -185,7 +184,7 @@ namespace GameRes.Formats.YuRis
                         {
                             var compress_data = new byte[entry.Size];
                             input.Read(compress_data, 0, compress_data.Length);
-                            var decomprrss_data = SnappyCodec.Uncompress(compress_data);
+                            var decomprrss_data = Snappier.Snappy.DecompressToArray (compress_data);
                             input = new BinMemoryStream(decomprrss_data, entry.Name);
                             break;
                         }

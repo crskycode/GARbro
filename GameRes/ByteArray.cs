@@ -26,6 +26,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using GameRes.Utility;
 
 namespace GameRes
@@ -142,6 +143,74 @@ namespace GameRes
     }
 
     public static class ByteArrayExt
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort ToUInt16 (this byte[] arr, int index)
+        {
+            return (ushort)(arr[index] | arr[index+1] << 8);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short ToInt16 (this byte[] arr, int index)
+        {
+            return (short)(arr[index] | arr[index+1] << 8);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int ToInt24 (this byte[] arr, int index)
+        {
+            return arr[index] | arr[index+1] << 8 | arr[index+2] << 16;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint ToUInt32 (this byte[] arr, int index)
+        {
+            return (uint)(arr[index] | arr[index+1] << 8 | arr[index+2] << 16 | arr[index+3] << 24);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int ToInt32 (this byte[] arr, int index)
+        {
+            return (int)ToUInt32 (arr, index);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong ToUInt64 (this byte[] arr, int index)
+        {
+            return (ulong)ToUInt32 (arr, index) | ((ulong)ToUInt32 (arr, index+4) << 32);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long ToInt64 (this byte[] arr, int index)
+        {
+            return (long)ToUInt64 (arr, index);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool AsciiEqual (this byte[] arr, int index, string str)
+        {
+            if (arr.Length-index < str.Length)
+                return false;
+            for (int i = 0; i < str.Length; ++i)
+                if ((char)arr[index+i] != str[i])
+                    return false;
+            return true;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool AsciiEqual (this byte[] arr, string str)
+        {
+            return arr.AsciiEqual (0, str);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string GetCString (this byte[] arr, int index, int length_limit)
+        {
+            return Binary.GetCString (arr, index, length_limit);
+        }
+    }
+
+    public static class CowArrayExt
     {
         public static ushort ToUInt16<TArray> (this TArray arr, int index) where TArray : IList<byte>
         {

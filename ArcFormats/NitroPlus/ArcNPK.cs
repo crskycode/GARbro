@@ -527,7 +527,7 @@ namespace GameRes.Formats.NitroPlus
                         m_stream = new DeflateStream (m_stream, CompressionMode.Decompress);
                         break;
                     case 3:
-                        m_stream = new ZstdNet.DecompressionStream (m_stream);
+                        m_stream = new ZstdSharp.DecompressionStream (m_stream);
                         break;
                 }
         }
