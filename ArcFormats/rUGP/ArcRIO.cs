@@ -1209,7 +1209,6 @@ namespace GameRes.Formats.Rugp
         public CObject      field_14;
         public CObject      field_18;
         public CObject      field_1C;
-        public CObject      field_20;
         public CObject      field_24;
         public CObject      field_28;
         public CObject      field_2C;
