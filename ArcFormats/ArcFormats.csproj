@@ -350,6 +350,7 @@
     <Compile Include="Leaf\ArcAR2.cs" />
     <Compile Include="Leaf\ArcLEAF.cs" />
     <Compile Include="Leaf\ArcPAK.cs" />
+    <Compile Include="Leaf\ArcSDAT.cs" />
     <Compile Include="Leaf\AudioP16.cs" />
     <Compile Include="Leaf\ImageBJR.cs" />
     <Compile Include="Leaf\ImageLFG.cs" />
