@@ -29,7 +29,7 @@ using System.IO;
 
 namespace GameRes.Formats.PenguinWorks {
     [Export(typeof(ArchiveFormat))]
-    public class KbmOpener : ArchiveFormat {
+    public class DatOpener : ArchiveFormat {
         public override string         Tag { get { return "DAT/PENGUIN"; } }
         public override string Description { get { return "Penguin Works resource archive"; } }
         public override uint     Signature { get { return 0; } }
