@@ -100,6 +100,14 @@ namespace GameRes.Formats.PkWare
 
         static readonly byte[] PkDirSignature = { (byte)'P', (byte)'K', 5, 6 };
 
+        static readonly byte[] VnDatHeaderKey = {
+            0x64, 0x36, 0x63, 0x35, 0x66,
+            0x4B, 0x49, 0x33, 0x47, 0x67,
+            0x42, 0x57, 0x70, 0x5A, 0x46,
+            0x33, 0x54, 0x7A, 0x36, 0x69,
+            0x61, 0x33, 0x6B, 0x46, 0x30
+        };
+
         public ZipOpener ()
         {
             Settings = new[] { ZipEncoding };
@@ -148,7 +156,18 @@ namespace GameRes.Formats.PkWare
         {
             var zarc = (PkZipArchive)arc;
             var zent = (ZipEntry)entry;
-            return zarc.Native.GetInputStream (zent.NativeEntry);
+            var input = zarc.Native.GetInputStream (zent.NativeEntry);
+            if (!zarc.File.Name.HasExtension (".vndat"))
+                return input;
+            var data = new byte[zent.UnpackedSize];
+            using (input)
+                input.Read (data, 0, data.Length);
+            for (int i = 1; i <= Math.Min (data.Length, 99); i++)
+                data[data.Length - i] ^= VnDatHeaderKey[i % VnDatHeaderKey.Length];
+            if (data.Length >= 100)
+                for (int i = 0; i < 100; i++)
+                    data[i] ^= VnDatHeaderKey[i % VnDatHeaderKey.Length];
+            return new BinMemoryStream (data, zent.Name);
         }
 
         /// <summary>

@@ -175,6 +175,7 @@
     <Compile Include="AIRNovel\ArcAIR.cs" />
     <Compile Include="aNCHOR\ArcFPD.cs" />
     <Compile Include="aNCHOR\AudioFCD.cs" />
+    <Compile Include="aNCHOR\Blowfish.cs" />
     <Compile Include="FrontierWorks\ArcPCARC.cs" />
     <Compile Include="Artemis\ImageNekoPNG.cs" />
     <Compile Include="CsWare\AudioWAV.cs" />
@@ -216,6 +217,10 @@
     <Compile Include="BlueGale\ImageBBM.cs" />
     <Compile Include="ClickTeam\ArcMF.cs" />
     <Compile Include="DxLib\ArcDX8.cs" />
+    <Compile Include="HuneX\ArcHFA.cs" />
+    <Compile Include="HuneX\ArcMZP.cs" />
+    <Compile Include="HuneX\Decoder.cs" />
+    <Compile Include="HuneX\ImageCBG.cs" />
     <Compile Include="Hypatia\ArcLPK.cs" />
     <Compile Include="Hypatia\ImageLSG.cs" />
     <Compile Include="Illusion\ArcPP.cs" />
@@ -387,6 +392,7 @@
     <Compile Include="Leaf\ArcAR2.cs" />
     <Compile Include="Leaf\ArcLEAF.cs" />
     <Compile Include="Leaf\ArcPAK.cs" />
+    <Compile Include="Leaf\ArcSDAT.cs" />
     <Compile Include="Leaf\AudioP16.cs" />
     <Compile Include="Leaf\ImageBJR.cs" />
     <Compile Include="Leaf\ImageLFG.cs" />
@@ -414,6 +420,7 @@
     <Compile Include="MultiFileArchive.cs" />
     <Compile Include="Musica\ArcANI.cs" />
     <Compile Include="MyAdv\ArcPAC.cs" />
+    <Compile Include="Nekopack\ArcDAT.cs" />
     <Compile Include="Nekopack\ArcNEKO2.cs" />
     <Compile Include="Nekopack\ArcNEKO3.cs" />
     <Compile Include="MAGES\ArcLAY.cs" />
@@ -480,7 +487,6 @@
     <Compile Include="RealLive\ImageG00Jpeg.cs" />
     <Compile Include="ResourceSettings.cs" />
     <Compile Include="Rits\ImageHBM.cs" />
-    <Compile Include="RPM\ArcZENOS.cs" />
     <Compile Include="rUGP\AudioRHA.cs" />
     <Compile Include="Lilim\ArcFGA.cs" />
     <Compile Include="ScenePlayer\ArcPMA.cs" />

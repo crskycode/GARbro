@@ -1,8 +1,8 @@
-//! \file       ArcZENOS.cs
-//! \date       2017 Nov 21
-//! \brief      Zenos resource archive format.
+//! \file       ArcDAT.cs
+//! \date       2026-04-14
+//! \brief      Penguin Works resource archive.
 //
-// Copyright (C) 2017 by morkt
+// Copyright (C) 2026 by morkt
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -23,34 +23,37 @@
 // IN THE SOFTWARE.
 //
 
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.IO;
 
-namespace GameRes.Formats.Rpm
-{
+namespace GameRes.Formats.PenguinWorks {
     [Export(typeof(ArchiveFormat))]
-    public class ZenosOpener : ArcOpener
-    {
-        public override string         Tag { get { return "ARC/ZENOS"; } }
-        public override string Description { get { return "Zenos resource archive"; } }
+    public class DatOpener : ArchiveFormat {
+        public override string         Tag { get { return "DAT/PENGUIN"; } }
+        public override string Description { get { return "Penguin Works resource archive"; } }
         public override uint     Signature { get { return 0; } }
         public override bool  IsHierarchic { get { return false; } }
         public override bool      CanWrite { get { return false; } }
 
-        public override ArcFile TryOpen (ArcView file)
-        {
-            int count = file.View.ReadInt32 (0);
-            if (!IsSaneCount (count) || 4 + count * 0x1C >= file.MaxOffset)
+        public override ArcFile TryOpen(ArcView file) {
+            int count = file.View.ReadInt32(0);
+            if (!IsSaneCount(count))
                 return null;
 
-            var index_reader = new ArcIndexReader (file, count, true);
-//            var scheme = new EncryptionScheme ("haku", 0x10);
-            var scheme = index_reader.GuessScheme (4, new int[] { 0x10 });
-            if (null == scheme)
-                return null;
-            var dir = index_reader.ReadIndex (4, scheme);
-            if (null == dir)
-                return null;
-            return new ArcFile (file, this, dir);
+            var dir = new List<Entry>(count);
+            int index_offset = 4, base_offset = 24 * count + 4;
+            for (int i = 0; i < count; i++) {
+                var name = file.View.ReadString(index_offset, 16);
+                var entry = Create<Entry>(name);
+                entry.Size = file.View.ReadUInt32(index_offset + 16);
+                entry.Offset = base_offset + file.View.ReadUInt32(index_offset + 20);
+                if (!entry.CheckPlacement(file.MaxOffset))
+                    return null;
+                dir.Add(entry);
+                index_offset += 24;
+            }
+            return new ArcFile(file, this, dir);
         }
     }
 }

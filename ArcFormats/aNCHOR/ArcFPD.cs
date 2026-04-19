@@ -63,7 +63,7 @@ namespace GameRes.Formats.Anchor {
                 return null;
             uint index_size = (uint)(data_start - offset);
 
-            var key = QueryKey();
+            var key = DefaultScheme.ArchiveKey;
             var dir = new List<Entry>(count);
 
             using (var input = file.CreateStream(offset, (uint)(data_start - offset)))
@@ -96,6 +96,8 @@ namespace GameRes.Formats.Anchor {
                     for (int i = 0; i < count; i++) {
                         dir[i].Name = Binary.GetCString(names, (int)name_offsets[i], Encoding.UTF8);
                         dir[i].Type = FormatCatalog.Instance.GetTypeFromName(dir[i].Name);
+                        if (dir[i].Name.EndsWith(".epk"))
+                            dir[i].Type = "script";
                     }
                 }
                 return new FpdArchive(file, this, dir, key);
@@ -105,17 +107,25 @@ namespace GameRes.Formats.Anchor {
         public override Stream OpenEntry(ArcFile arc, Entry entry) {
             var farc = arc as FpdArchive;
             var pent = entry as PackedEntry;
-            var input = farc.File.CreateStream(entry.Offset, entry.Size);
-            var decrypted = new ByteStringEncryptedStream(input, farc.Key);
+            Stream input = farc.File.CreateStream(entry.Offset, entry.Size);
+            input = new ByteStringEncryptedStream(input, farc.Key);
             if (pent.IsPacked)
-                return new ZLibStream(decrypted, CompressionMode.Decompress);
-            else
-                return decrypted;
-            // TODO: epk decryption
-        }
-
-        byte[] QueryKey() {
-            return DefaultScheme.ArchiveKey;
+                input = new ZLibStream(input, CompressionMode.Decompress);
+            if (pent.Name.EndsWith(".epk")) {
+                var mem = new MemoryStream();
+                input.CopyTo(mem);
+                mem.Seek(-0x20, SeekOrigin.End);
+                var buf = new byte[4];
+                mem.Read(buf, 0, 4);
+                uint last = Binary.BigEndian(BitConverter.ToUInt32(buf, 0));
+                mem.Seek(0, SeekOrigin.Begin);
+                
+                var key = Encoding.UTF8.GetBytes(Path.GetFileNameWithoutExtension(pent.Name));
+                var encryption = new Mk2Blowfish(key, DefaultScheme.EpkContext);
+                input = new InputCryptoStream(mem, encryption.CreateDecryptor());
+                input = new LimitStream(input, last);
+            }
+            return input;
         }
 
         FpdScheme DefaultScheme = new FpdScheme();
@@ -129,6 +139,6 @@ namespace GameRes.Formats.Anchor {
     [Serializable]
     public class FpdScheme : ResourceScheme {
         public byte[] ArchiveKey;
-        public byte[] EpkKey;
+        public byte[] EpkContext;
     }
 }

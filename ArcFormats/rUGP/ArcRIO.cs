@@ -1243,7 +1243,9 @@ namespace GameRes.Formats.Rugp
         void ReadRelic (CRioArchive arc)
         {
             Version = arc.ReadInt32();
-            if (Version >= 0x24)
+            if (Version == CRioArchive.ObjectSignature)
+                return; // Kimi ga Ita Kisetsu ~Primary~ doesn't have these fields
+            else if (Version >= 0x24)
             {
                 field_24 = arc.ReadRioReference ("CDatabaseBase"); // UnivUI
                 field_28 = arc.ReadRioReference ("CDatabaseBase");

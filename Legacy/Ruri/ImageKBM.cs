@@ -1,8 +1,8 @@
-//! \file       AudioBGI.cs
-//! \date       Sat Aug 29 21:44:06 2015
-//! \brief      BURIKO engine audio file (Ogg/Vorbis)
+//! \file       ImageKBM.cs
+//! \date       2026-04-16
+//! \brief      Ruri System image format.
 //
-// Copyright (C) 2015 by morkt
+// Copyright (C) 2026 by morkt
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to
@@ -23,37 +23,36 @@
 // IN THE SOFTWARE.
 //
 
+using System;
 using System.ComponentModel.Composition;
 using System.IO;
-using GameRes.Utility;
 
-namespace GameRes.Formats.BGI
-{
-    [Export(typeof(AudioFormat))]
-    public class BgiAudio : AudioFormat
-    {
-        public override string         Tag { get { return "BW"; } }
-        public override string Description { get { return "BGI/Ethornell engine audio (Ogg/Vorbis)"; } }
+namespace GameRes.Formats.Ruri {
+    [Export(typeof(ImageFormat))]
+    public class KbmFormat : ImageFormat {
+        public override string         Tag { get { return "KBM"; } }
+        public override string Description { get { return "Ruri System image format"; } }
         public override uint     Signature { get { return 0; } }
+        public override bool      CanWrite { get { return false; } }
 
-        public BgiAudio ()
-        {
-            Signatures = new uint[] { 0x40, 0 };
-            Extensions = new string[] { "bw", "", "_bw", "hw" };
+        public KbmFormat() {
+            Extensions = new string[] { "Kbm" };
         }
-        
-        public override SoundInput TryOpen (IBinaryStream file)
-        {
-            var header = file.ReadHeader (8);
-            if (!header.AsciiEqual (4, "bw  ") && !header.AsciiEqual (4, "hw  "))
-                return null;
-            uint offset = header.ToUInt32 (0);
-            if (offset >= file.Length)
-                return null;
 
-            var input = new StreamRegion (file.AsStream, offset);
-            return new OggInput (input);
-            // input is left undisposed in case of exception.
+        public override ImageMetaData ReadMetaData(IBinaryStream stream) {
+            if ((stream.Signature & 0xFFFFFF) != 0x4D424B)
+                return null;
+            stream = BinaryStream.FromStream(new StreamRegion(stream.AsStream, 0x100), stream.Name);
+            return Bmp.ReadMetaData(stream);
+        }
+
+        public override ImageData Read(IBinaryStream stream, ImageMetaData info) {
+            stream = BinaryStream.FromStream(new StreamRegion(stream.AsStream, 0x100), stream.Name);
+            return Bmp.Read(stream, info);
+        }
+
+        public override void Write(Stream file, ImageData image) {
+            throw new NotImplementedException("KbmFormat.Write not implemented");
         }
     }
 }
