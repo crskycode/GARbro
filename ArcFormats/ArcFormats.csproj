@@ -176,6 +176,8 @@
     <Compile Include="aNCHOR\ArcFPD.cs" />
     <Compile Include="aNCHOR\AudioFCD.cs" />
     <Compile Include="aNCHOR\Blowfish.cs" />
+    <Compile Include="CatSystem\ArcBinV1.cs" />
+    <Compile Include="CatSystem\ArcPidaV1.cs" />
     <Compile Include="FrontierWorks\ArcPCARC.cs" />
     <Compile Include="Artemis\ImageNekoPNG.cs" />
     <Compile Include="CsWare\AudioWAV.cs" />
