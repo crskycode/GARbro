@@ -1,4 +1,4 @@
-﻿//! \file       ArcLINK.cs
+//! \file       ArcLINK.cs
 //! \date       Fri Jan 22 18:44:56 2016
 //! \brief      KaGuYa archive format.
 //
@@ -34,6 +34,7 @@ namespace GameRes.Formats.Kaguya
     internal class LinkEntry : PackedEntry
     {
         public bool IsEncrypted;
+        public int  PackType;
     }
 
     internal class LinkArchive : ArcFile
@@ -103,6 +104,30 @@ namespace GameRes.Formats.Kaguya
                 }
                 return base.OpenEntry (arc, entry);
             }
+
+            if (lent.IsPacked)
+            {
+                var input = arc.File.CreateStream (entry.Offset, entry.Size);
+                if (lent.PackType == 2)
+                {
+                    using (var bmr = new BmrDecoder (input))
+                    {
+                        bmr.Unpack();
+                        return new BinMemoryStream (bmr.Data, entry.Name);
+                    }
+                }
+                else if (lent.PackType == 1)
+                {
+                    using (input)
+                    {
+                        byte[] packedData = new byte[entry.Size];
+                        input.Read(packedData, 0, (int)entry.Size);
+                        byte[] unpackedData = LzssDecoder(packedData);
+                        return new BinMemoryStream (unpackedData, entry.Name);
+                    }
+                }
+            }
+
             if (lent.IsEncrypted)
             {
                 var larc = arc as LinkArchive;
@@ -110,12 +135,96 @@ namespace GameRes.Formats.Kaguya
                     return base.OpenEntry (arc, entry);
                 return larc.Encryption.DecryptEntry (larc, lent);
             }
-            using (var input = arc.File.CreateStream (entry.Offset, entry.Size))
-            using (var bmr = new BmrDecoder (input))
+            
+            return base.OpenEntry(arc, entry);
+        }
+
+        public static byte[] LzssDecoder(byte[] input)
+        {
+            if (input.Length < 4) return input;
+            int expectedSize = BitConverter.ToInt32(input, 0);
+            int inputPtr = 4;
+            byte[] output = new byte[expectedSize];
+            int outputPtr = 0;
+
+            byte[] window = new byte[4096];
+            int windowPtr = 1;
+            byte bitMask = 0x80;
+            byte currentByte = 0;
+
+            while (outputPtr < expectedSize && inputPtr < input.Length)
             {
-                bmr.Unpack();
-                return new BinMemoryStream (bmr.Data, entry.Name);
+                if (bitMask == 0x80)
+                {
+                    currentByte = input[inputPtr++];
+                }
+                bool isLiteral = (currentByte & bitMask) != 0;
+                bitMask >>= 1;
+                if (bitMask == 0) bitMask = 0x80;
+
+                if (isLiteral)
+                {
+                    byte b = 0;
+                    for (int i = 7; i >= 0; i--)
+                    {
+                        if (bitMask == 0x80)
+                        {
+                            if (inputPtr >= input.Length) break;
+                            currentByte = input[inputPtr++];
+                        }
+                        if ((currentByte & bitMask) != 0) b |= (byte)(1 << i);
+                        bitMask >>= 1;
+                        if (bitMask == 0) bitMask = 0x80;
+                    }
+
+                    if (outputPtr < expectedSize)
+                    {
+                        output[outputPtr++] = b;
+                        window[windowPtr] = b;
+                        windowPtr = (windowPtr + 1) & 0xFFF;
+                    }
+                }
+                else
+                {
+                    int offset = 0;
+                    for (int i = 11; i >= 0; i--)
+                    {
+                        if (bitMask == 0x80)
+                        {
+                            if (inputPtr >= input.Length) break;
+                            currentByte = input[inputPtr++];
+                        }
+                        if ((currentByte & bitMask) != 0) offset |= (1 << i);
+                        bitMask >>= 1;
+                        if (bitMask == 0) bitMask = 0x80;
+                    }
+
+                    if (offset == 0) break;
+
+                    int length = 0;
+                    for (int i = 3; i >= 0; i--)
+                    {
+                        if (bitMask == 0x80)
+                        {
+                            if (inputPtr >= input.Length) break;
+                            currentByte = input[inputPtr++];
+                        }
+                        if ((currentByte & bitMask) != 0) length |= (1 << i);
+                        bitMask >>= 1;
+                        if (bitMask == 0) bitMask = 0x80;
+                    }
+
+                    int count = length + 2;
+                    for (int i = 0; i < count && outputPtr < expectedSize; i++)
+                    {
+                        byte b = window[(offset + i) & 0xFFF];
+                        output[outputPtr++] = b;
+                        window[windowPtr] = b;
+                        windowPtr = (windowPtr + 1) & 0xFFF;
+                    }
+                }
             }
+            return output;
         }
 
         internal ArcFile ReadOldIndex (ArcView file)
@@ -209,15 +318,29 @@ namespace GameRes.Formats.Kaguya
                 var entry = FormatCatalog.Instance.Create<LinkEntry> (name);
                 entry.Offset = m_input.Position;
                 entry.Size   = size - (uint)(entry.Offset - base_offset);
+                
                 if (is_compressed)
                 {
-                    m_input.Read (header, 0, 4);
-                    if (header.AsciiEqual ("BMR"))
+                    int type = flags & 3;
+                    if (type == 2)
+                    {
+                        m_input.Read (header, 0, 4);
+                        if (header.AsciiEqual ("BMR"))
+                        {
+                            entry.IsPacked = true;
+                            entry.PackType = 2;
+                            entry.UnpackedSize = m_input.ReadUInt32();
+                        }
+                    }
+                    else if (type == 1)
                     {
                         entry.IsPacked = true;
+                        entry.PackType = 1;
                         entry.UnpackedSize = m_input.ReadUInt32();
+                        m_input.Seek(-4, SeekOrigin.Current);
                     }
                 }
+                
                 entry.IsEncrypted = (flags & 4) != 0;
                 m_has_encrypted = m_has_encrypted || entry.IsEncrypted;
                 dir.Add (entry);
@@ -556,8 +679,6 @@ namespace GameRes.Formats.Kaguya
             m_title = ReadString();
             if (m_version.Major < 2)
                 m_input.ReadCString();
-//            else
-//                SkipString();
             SkipString();
             SkipString();
             m_input.ReadByte();
