@@ -178,6 +178,8 @@
     <Compile Include="aNCHOR\Blowfish.cs" />
     <Compile Include="CatSystem\ArcBinV1.cs" />
     <Compile Include="CatSystem\ArcPidaV1.cs" />
+    <Compile Include="Entergram\ArcPacV1.cs" />
+    <Compile Include="Entergram\QuickLZ.cs" />
     <Compile Include="FrontierWorks\ArcPCARC.cs" />
     <Compile Include="Artemis\ImageNekoPNG.cs" />
     <Compile Include="CsWare\AudioWAV.cs" />
