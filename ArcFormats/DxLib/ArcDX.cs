@@ -563,10 +563,11 @@ namespace GameRes.Formats.DxLib
 
         public override int ReadByte ()
         {
+            long pos = Position;
             int b = BaseStream.ReadByte();
             if (m_key.Length !=0)
             {
-                int key_pos = (int)((m_base_pos + Position) % m_key.Length);
+                int key_pos = (int)((m_base_pos + pos) % m_key.Length);
                 if (-1 != b)
                 {
                     b ^= m_key[key_pos];
