@@ -1,4 +1,4 @@
-﻿//! \file       ArcLINK.cs
+//! \file       ArcLINK.cs
 //! \date       Fri Jan 22 18:44:56 2016
 //! \brief      KaGuYa archive format.
 //
@@ -34,6 +34,7 @@ namespace GameRes.Formats.Kaguya
     internal class LinkEntry : PackedEntry
     {
         public bool IsEncrypted;
+		public int  PackType;
     }
 
     internal class LinkArchive : ArcFile
@@ -110,13 +111,28 @@ namespace GameRes.Formats.Kaguya
                     return base.OpenEntry (arc, entry);
                 return larc.Encryption.DecryptEntry (larc, lent);
             }
-            using (var input = arc.File.CreateStream (entry.Offset, entry.Size))
-            using (var bmr = new BmrDecoder (input))
-            {
-                bmr.Unpack();
-                return new BinMemoryStream (bmr.Data, entry.Name);
-            }
-        }
+			using (var input = arc.File.CreateStream (entry.Offset, entry.Size))
+			{
+				if (lent.PackType == 2)
+				{
+					using (var bmr = new BmrDecoder (input))
+					{
+						bmr.Unpack();
+						return new BinMemoryStream (bmr.Data, entry.Name);
+					}
+				}
+				else if (lent.PackType == 1)	//LZSS
+				{
+					using (var lz_input = arc.File.CreateStream(entry.Offset + 4, entry.Size - 4, entry.Name))
+					using (var lz = new LzReader(lz_input.AsStream, entry.Size - 4, lent.UnpackedSize))
+					{
+						lz.Unpack();
+						return new BinMemoryStream (lz.Data, entry.Name);
+					}
+				}
+			}
+			return base.OpenEntry (arc, entry);
+		}
 
         internal ArcFile ReadOldIndex (ArcView file)
         {
@@ -211,13 +227,22 @@ namespace GameRes.Formats.Kaguya
                 entry.Size   = size - (uint)(entry.Offset - base_offset);
                 if (is_compressed)
                 {
-                    m_input.Read (header, 0, 4);
-                    if (header.AsciiEqual ("BMR"))
-                    {
-                        entry.IsPacked = true;
-                        entry.UnpackedSize = m_input.ReadUInt32();
-                    }
-                }
+					entry.PackType = flags & 3;
+					if (entry.PackType == 2)  // BMR
+					{
+						m_input.Read (header, 0, 4);
+						if (header.AsciiEqual ("BMR"))
+						{
+							entry.IsPacked = true;
+							entry.UnpackedSize = m_input.ReadUInt32();
+						}
+					}
+					else if (entry.PackType == 1)  // LZSS
+					{
+						entry.IsPacked = true;
+						entry.UnpackedSize = m_input.ReadUInt32();
+					}
+				}
                 entry.IsEncrypted = (flags & 4) != 0;
                 m_has_encrypted = m_has_encrypted || entry.IsEncrypted;
                 dir.Add (entry);
@@ -465,6 +490,7 @@ namespace GameRes.Formats.Kaguya
         }
         #endregion
     }
+
 
     internal abstract class ParamsDeserializer
     {
