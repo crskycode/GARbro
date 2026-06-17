@@ -111,11 +111,9 @@ namespace GameRes.Formats.Purple
                         *data32++ = Binary.RotL (t, shift);
                     }
                     byte* data8 = (byte*)data32;
-                    shift = 4;
                     for (int count = data.Length & 3; count > 0; --count)
                     {
-                        *data8 = (byte)((*data8 ^ ((EncryptionTable[table_ptr++ & 0xF] + key) >> shift)) + 0x52);
-                        shift += 4;
+                        *data8 = (byte)((*data8 ^ ((EncryptionTable[table_ptr++ & 0xF] + key) >> (count * 4))) + 0x52);
                         ++data8;
                     }
                 }
