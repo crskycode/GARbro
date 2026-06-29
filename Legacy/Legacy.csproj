@@ -152,6 +152,7 @@
     <Compile Include="Eye\ImageCSF.cs" />
     <Compile Include="FazeX\ImageFGP.cs" />
     <Compile Include="Giga\ArcALL.cs" />
+    <Compile Include="Giga\ArcBBWAV.cs" />
     <Compile Include="HillField\ImageIMA.cs" />
     <Compile Include="HillField\ImageIMG.cs" />
     <Compile Include="hmp\ImageALP.cs" />
