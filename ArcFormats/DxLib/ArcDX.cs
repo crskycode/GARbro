@@ -315,13 +315,13 @@ namespace GameRes.Formats.DxLib
         {
             if (key.Length == 0)
                 return;
-                int key_pos = (int)(offset % key.Length);
-                for (int i = 0; i < count; ++i)
-                {
-                    data[index + i] ^= key[key_pos++];
-                    if (key.Length == key_pos)
-                        key_pos = 0;
-                }
+            int key_pos = (int)(offset % key.Length);
+            for (int i = 0; i < count; ++i)
+            {
+                data[index + i] ^= key[key_pos++];
+                if (key.Length == key_pos)
+                    key_pos = 0;
+            }
         }
 
         public override ResourceScheme Scheme
@@ -365,7 +365,7 @@ namespace GameRes.Formats.DxLib
                 return new IndexReaderV2 (header, version, input);
             else if (version >= 6 && version < 8)
                 return new IndexReaderV6 (header, version, input);
-            else if (version >=8)
+            else if (version >= 8)
                 return new IndexReaderV8 (header, version, input);
             else
                 throw new InvalidFormatException ("Not supported DX archive version.");
@@ -549,7 +549,7 @@ namespace GameRes.Formats.DxLib
             : base (stream, leave_open)
         {
             m_key = key;
-            m_base_pos = m_key.Length !=0 ?(int)(base_position % m_key.Length):0;
+            m_base_pos = m_key.Length != 0 ? (int)(base_position % m_key.Length) : 0;
         }
 
         public override int Read (byte[] buffer, int offset, int count)
@@ -565,7 +565,7 @@ namespace GameRes.Formats.DxLib
         {
             long pos = Position;
             int b = BaseStream.ReadByte();
-            if (m_key.Length !=0)
+            if (m_key.Length != 0)
             {
                 int key_pos = (int)((m_base_pos + pos) % m_key.Length);
                 if (-1 != b)
@@ -578,7 +578,6 @@ namespace GameRes.Formats.DxLib
 
         public override void Write (byte[] buffer, int offset, int count)
         {
-
             byte[] write_buf = new byte[count];
             if (m_key.Length != 0)
             {
@@ -589,7 +588,8 @@ namespace GameRes.Formats.DxLib
                     if (m_key.Length == key_pos)
                         key_pos = 0;
                 }
-            } else
+            }
+            else
             {
                 write_buf = buffer;
             }
@@ -598,11 +598,12 @@ namespace GameRes.Formats.DxLib
 
         public override void WriteByte (byte value)
         {
-            if(m_key.Length != 0)
+            if (m_key.Length != 0)
             {
                 int key_pos = (int)((m_base_pos + Position) % m_key.Length);
-                BaseStream.WriteByte((byte)(value ^ m_key[key_pos]));
-            } else
+                BaseStream.WriteByte ((byte)(value ^ m_key[key_pos]));
+            }
+            else
             {
                 BaseStream.WriteByte ((byte)value);
             }

@@ -122,7 +122,11 @@ namespace GameRes.Formats.DxLib
             bin[9] ^= 0x7F;
             bin[10] = Binary.RotByteL ((byte)(bin[10] ^ 0xD6), 4);
             bin[11] ^= 0xCC;
-            return Encodings.cp932.GetString (bin);
+            if (bin.Any (b => b < 0x20 || b > 0x7E))
+            {
+                return "";
+            }
+            return Encoding.ASCII.GetString (bin);
         }
     }
 
