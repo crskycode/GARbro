@@ -507,7 +507,7 @@ namespace GameRes.Formats.Purple
                 data[i+1] ^= key2;
                 data[i+1] -= data[src++];
             }
-	}
+        }
 
         internal static void EncryptPb3 (byte[] data)
         {
