@@ -89,14 +89,14 @@ namespace GameRes.Formats.Valkyria
             var index = file.View.ReadBytes (8, index_size);
             if (index_encrypted)
             {
-                var scheme = new IndexEncryptionScheme
+                var scheme = new EncryptionScheme
                 {
                     OddKey1 = 0x627e907b,
                     OddKey2 = 7,
                     EvenKey1 = 0xe1da85e3,
                     EvenKey2 = 3
                 };
-                DecryptIndex (index, scheme);
+                DecryptIndex (index, scheme, (uint)index.Length);
             }
             var dir = new List<Entry> (count);
             for (int i = 0; i < count; ++i)
@@ -165,20 +165,19 @@ namespace GameRes.Formats.Valkyria
             return BitConverter.ToUInt32 (key, 0);
         }
 
-        private static void DecryptIndex (byte[] index, IndexEncryptionScheme scheme)
+        public static void DecryptIndex (byte[] index, EncryptionScheme scheme, uint length)
         {
-            var len = index.Length;
             var branch = false;
-            for (int i = 0; i <= len - 4; i++)
+            for (int i = 0; i <= index.Length - 4; i++)
             {
                 unsafe
                 {
                     fixed (byte* index_ptr = index)
                     {
                         uint* ptr = (uint*)(index_ptr + i);
-                        uint key1 = branch ? scheme.OddKey1 : scheme.EvenKey1;
-                        uint key2 = branch ? scheme.OddKey2 : scheme.EvenKey2;
-                        *ptr = (uint)((*ptr - key1 >> (int)(key2 & 0x1f) | *ptr - key1 << (int)(0x20 - (key2 & 0x1f))) ^ len);
+                        var key1 = branch ? scheme.OddKey1 : scheme.EvenKey1;
+                        var key2 = branch ? scheme.OddKey2 : scheme.EvenKey2;
+                        *ptr = Binary.RotR (*ptr - key1, key2) ^ length;
                         branch = !branch;
                     }
                 }
@@ -187,11 +186,11 @@ namespace GameRes.Formats.Valkyria
     }
 
     [Serializable]
-    public class IndexEncryptionScheme
+    public class EncryptionScheme
     {
         public uint OddKey1;
-        public uint OddKey2;
+        public int  OddKey2;
         public uint EvenKey1;
-        public uint EvenKey2;
+        public int  EvenKey2;
     }
 }
