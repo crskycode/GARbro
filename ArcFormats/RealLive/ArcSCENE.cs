@@ -180,7 +180,7 @@ namespace GameRes.Formats.RealLive
 
             int pos = 0;
             const int CHECK = 3;
-            // find for encrypted \x00\x00\x1f\x00
+            // search for encrypted \x00\x00\x1f\x00
             while (true)
             {
                 uint t = LittleEndian.ToUInt32 (buffer, pos);
@@ -216,6 +216,9 @@ namespace GameRes.Formats.RealLive
 
         byte[] QueryKey (string arc_name)
         {
+            var title = FormatCatalog.Instance.LookupGame (arc_name);
+            if (!string.IsNullOrEmpty (title) && KnownKeys.ContainsKey (title))
+                return KnownKeys[title];
             var options = Query<SceneOptions> (arcStrings.ArcEncryptedNotice);
             return options.ExtraKey;
         }
