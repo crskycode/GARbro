@@ -861,5 +861,17 @@ namespace GameRes.Formats.Properties {
                 this["BELLDATATitle"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SCENETitle {
+            get {
+                return ((string)(this["SCENETitle"]));
+            }
+            set {
+                this["SCENETitle"] = value;
+            }
+        }
     }
 }
