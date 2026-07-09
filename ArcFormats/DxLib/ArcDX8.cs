@@ -31,6 +31,7 @@ using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
+using System.Text;
 using System.Windows.Navigation;
 using static GameRes.Formats.DxLib.Dx8Opener;
 
@@ -64,10 +65,15 @@ namespace GameRes.Formats.DxLib
                                //15 bytes of padding.
     }
 
+    [Serializable]
+    public class Dx8Scheme : ResourceScheme {
+        public IDictionary<string, IDxKey> KnownKeys;
+    }
+
     [Export(typeof(ArchiveFormat))]
     public class Dx8Opener : DxOpener
     {
-        public override string         Tag { get { return "BIN/DXLIB"; } }
+        public override string         Tag { get { return "DXA8"; } }
         public override string Description { get { return "DxLib archive version 8"; } }
         public override uint     Signature { get { return 0x00085844; } }
         public override bool  IsHierarchic { get { return true; } }
@@ -82,10 +88,13 @@ namespace GameRes.Formats.DxLib
         //static readonly byte[] DefaultKey = new byte[] { 0xBE, 0xC8, 0x8A, 0xF5, 0x28, 0x50, 0xC9 };
 
 
-        DxScheme DefaultScheme = new DxScheme { KnownKeys = new List<IDxKey>() };
+        Dx8Scheme DefaultScheme = new Dx8Scheme { KnownKeys = new Dictionary<string, IDxKey>() };
 
+        public override ResourceScheme Scheme {
+            get { return DefaultScheme; }
+            set { DefaultScheme = (Dx8Scheme)value; }
+        }
 
-        
 
         internal enum DXA8Flags : UInt32
         {
@@ -96,14 +105,14 @@ namespace GameRes.Formats.DxLib
         [Serializable]
         public class DXAOpts : ResourceOptions
         {
-            public string Keyword;
+            public byte[] Keyword;
         }
 
         public override ResourceOptions GetDefaultOptions()
         {
             return new DXAOpts
             {
-                Keyword = Properties.Settings.Default.DXAPassword
+                Keyword = Encoding.ASCII.GetBytes(Properties.Settings.Default.DXAPassword)
             };
         }
 
@@ -114,9 +123,19 @@ namespace GameRes.Formats.DxLib
         {
             if (widget is GUI.WidgetDXA)
             {
+                var w = (GUI.WidgetDXA)widget;
+                byte[] keyword;
+                if (w.Title.SelectedIndex != -1)
+                {
+                    keyword = ((KeyValuePair<string, IDxKey>)(w.Title.SelectedItem)).Value.Password;
+                }
+                else
+                {
+                    keyword = Encoding.ASCII.GetBytes(w.Password.Text);
+                }
                 return new DXAOpts
                 {
-                    Keyword = ((GUI.WidgetDXA)widget).Password.Text
+                    Keyword = keyword
                 };
             }
             return GetDefaultOptions();
@@ -124,7 +143,7 @@ namespace GameRes.Formats.DxLib
 
         public override object GetAccessWidget()
         {
-            return new GUI.WidgetDXA();
+            return new GUI.WidgetDXA(DefaultScheme.KnownKeys);
         }
 
         public override ArcFile TryOpen (ArcView file)
@@ -141,7 +160,7 @@ namespace GameRes.Formats.DxLib
             };
             if (dx.DirTable >= dx.IndexSize || dx.FileTable >= dx.IndexSize)
                 return null;
-            DxKey8 key = null;
+            IDxKey key = null;
             
             //FIXME: ReadBytes sets hard cap of filesize to 4GB.
             var headerBuffer = file.View.ReadBytes(dx.IndexOffset, (uint)(file.MaxOffset-dx.IndexOffset));

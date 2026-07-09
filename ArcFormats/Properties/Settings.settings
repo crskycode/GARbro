@@ -201,7 +201,7 @@
       <Value Profile="(Default)">932</Value>
     </Setting>
     <Setting Name="DXAPassword" Type="System.String" Scope="User">
-      <Value Profile="(Default)">DXARC</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="NexasEncodingCP" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">932</Value>

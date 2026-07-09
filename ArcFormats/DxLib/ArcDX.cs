@@ -106,7 +106,7 @@ namespace GameRes.Formats.DxLib
             {
                 var encryption = arc.Encryption;
                 KnownKeys.Insert (0, encryption);
-                Trace.WriteLine (string.Format ("Restored key '{0}'", encryption.Password, "[DXA]"));
+                //Trace.WriteLine (string.Format ("Restored key '{0}'", encryption.Password, "[DXA]"));
             }
             return arc;
         }
@@ -120,7 +120,7 @@ namespace GameRes.Formats.DxLib
             {
                 var dir = ReadIndex (file, 6, key);
                 if (dir != null)
-                    return new DxArchive (file, this, dir, new DxKey (key), 6);
+                    return new DxArchive (file, this, dir, DxKey.CreateInstanceFromKey (key), 6);
             }
             key = new byte[12];
             for (short version = 4; version >= 1; --version)
@@ -145,7 +145,7 @@ namespace GameRes.Formats.DxLib
                 {
                     var dir = ReadIndex (file, version, key);
                     if (null != dir)
-                        return new DxArchive (file, this, dir, new DxKey (key), version);
+                        return new DxArchive (file, this, dir, DxKey.CreateInstanceFromKey (key), version);
                 }
                 catch { /* ignore parse errors */ }
             }
