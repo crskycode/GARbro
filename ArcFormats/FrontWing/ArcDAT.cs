@@ -65,15 +65,7 @@ namespace GameRes.Formats.FrontWing
             if (file.MaxOffset < index_size + 4)
                 return null;
             var index = file.View.ReadBytes (file.MaxOffset - 4 - index_size, (uint)index_size);
-            bool encrypted = false;
-            for (int i = 0; i < 40 && index[i] != 0; i++)
-            {
-                if (index[i] < 0x20 || index[i] >= 0x7f)
-                {
-                    encrypted = true;
-                    break;
-                }
-            }
+            bool encrypted = !index.IsAsciiVisible (0, 0x40, true);
             if (encrypted)
                 NibbleSwap (index);
 
