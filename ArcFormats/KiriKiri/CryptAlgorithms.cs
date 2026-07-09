@@ -1671,4 +1671,22 @@ namespace GameRes.Formats.KiriKiri
         }
     }
 
+    [Serializable]
+    public class HoneyCombCrypt : ICrypt
+    {
+        public override void Decrypt(Xp3Entry entry, long offset, byte[] buffer, int pos, int count)
+        {
+            uint seed = entry.Hash ^ 0xABCD9876;
+            byte key = (byte)((seed >> 24) ^ (seed >> 16) ^ (seed >> 8) ^ seed);
+            if (key == 0)
+                key = 0xA5;
+            for (int i = 0; i < count; ++i)
+                buffer[pos + i] ^= key;
+        }
+
+        public override void Encrypt(Xp3Entry entry, long offset, byte[] values, int pos, int count)
+        {
+            Decrypt(entry, offset, values, pos, count);
+        }
+    }
 }
