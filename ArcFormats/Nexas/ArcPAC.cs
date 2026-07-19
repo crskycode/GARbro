@@ -85,7 +85,7 @@ namespace GameRes.Formats.NeXAS
 
         public override ArcFile TryOpen (ArcView file)
         {
-            if (!file.View.AsciiEqual (0, "PAC") || 'K' == file.View.ReadByte (3))
+            if (!file.View.AsciiEqual (0, "PAC"))
                 return null;
 
             List<Entry> dir = null;

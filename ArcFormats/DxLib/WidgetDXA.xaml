@@ -12,8 +12,7 @@
     <Label Content="{x:Static s:arcStrings.ArcTitleOrPassword}" HorizontalAlignment="Left"/>
     <ComboBox Name="Title" Width="200" HorizontalAlignment="Left"
           ItemsSource="{Binding RelativeSource={RelativeSource Self}, Path=DataContext}"
-          SelectedValue="{Binding ElementName=Password, Path=Text, Mode=TwoWay}" SelectedValuePath="Value"
           DisplayMemberPath="Key"/>
     <TextBox x:Name="Password" Width="200" HorizontalAlignment="Left" Margin="0,5,0,0"
-         Text="{Binding Source={x:Static p:Settings.Default}, Path=DXAPassword, Mode=OneWay}"/>
+         Text="{Binding Source={x:Static p:Settings.Default}, Path=DXAPassword, Mode=TwoWay}"/>
 </StackPanel>

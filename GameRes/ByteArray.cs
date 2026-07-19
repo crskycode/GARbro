@@ -208,6 +208,27 @@ namespace GameRes
         {
             return Binary.GetCString (arr, index, length_limit);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsAsciiVisible (this byte[] arr)
+        {
+            return arr.IsAsciiVisible (0, arr.Length);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsAsciiVisible (this byte[] arr, int index, bool terminate = false)
+        {
+            return arr.IsAsciiVisible (index, arr.Length - index, terminate);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsAsciiVisible (this byte[] arr, int index, int length_limit, bool terminate = false)
+        {
+            for (int i = index; i < index + length_limit && (!terminate || arr[i] != 0); ++i)
+                if (!CharExt.IsAsciiVisible ((char)arr[i]))
+                    return false;
+            return true;
+        }
     }
 
     public static class CowArrayExt
@@ -266,6 +287,15 @@ namespace GameRes
         {
             arr.Reclaim();
             return Binary.GetCString (arr.ToArray(), index, length_limit);
+        }
+    }
+
+    public static class CharExt
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsAsciiVisible (this char c)
+        {
+            return c >= 0x20 && c <= 0x7E;
         }
     }
 }

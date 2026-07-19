@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,9 +22,10 @@ namespace GameRes.Formats.GUI
     /// </summary>
     public partial class WidgetDXA : StackPanel
     {
-        public WidgetDXA()
+        public WidgetDXA(IEnumerable titles)
         {
             InitializeComponent();
+            this.DataContext = titles;
         }
     }
 }

@@ -735,10 +735,10 @@ namespace GameRes.Formats.Cyberworks
             }
             if (entry_idx != m_arc_number)
                 return false;
-            if (m_type[0] > 0x20 && m_type[0] < 0x7F)
+            if (m_type[0].IsAsciiVisible())
             {
                 string ext;
-                if (m_type[1] > 0x20 && m_type[1] < 0x7F)
+                if (m_type[1].IsAsciiVisible())
                     ext = new string (m_type);
                 else
                     ext = new string (m_type[0], 1);
@@ -787,7 +787,7 @@ namespace GameRes.Formats.Cyberworks
             if (entry_size > 0x11)
                 throw new InvalidFormatException();
             char type = (char)m_index.ReadByte();
-            if (type > 0x20 && type < 0x7F)
+            if (type.IsAsciiVisible())
             {
                 string ext = new string (type, 1);
                 if ('b' == type)

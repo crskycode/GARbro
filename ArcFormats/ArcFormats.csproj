@@ -489,8 +489,13 @@
     <Compile Include="Qlie\ImageABMP.cs" />
     <Compile Include="Qlie\ImageARGB.cs" />
     <Compile Include="RealLive\ArcKOE.cs" />
+    <Compile Include="RealLive\ArcPCK.cs" />
+    <Compile Include="RealLive\ArcSCENE.cs" />
     <Compile Include="RealLive\ArcSEEN.cs" />
     <Compile Include="RealLive\ImageG00Jpeg.cs" />
+    <Compile Include="RealLive\WidgetSCENE.xaml.cs">
+      <DependentUpon>WidgetSCENE.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ResourceSettings.cs" />
     <Compile Include="Rits\ImageHBM.cs" />
     <Compile Include="rUGP\AudioRHA.cs" />
@@ -740,6 +745,7 @@
     <Compile Include="BlueGale\ImageZBM.cs" />
     <Compile Include="Circus\ArcPCK.cs" />
     <Compile Include="Cmvs\ArcCPZ.cs" />
+    <Compile Include="Cmvs\ArcCPZ3.cs" />
     <Compile Include="Pandora\ArcPBX.cs" />
     <Compile Include="Banana\ArcPK.cs" />
     <Compile Include="Banana\ImageMAG.cs" />
@@ -1324,6 +1330,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Qlie\WidgetQLIE.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RealLive\WidgetSCENE.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

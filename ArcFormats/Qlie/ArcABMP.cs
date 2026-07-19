@@ -229,17 +229,9 @@ namespace GameRes.Formats.Qlie
 
         static string GetTypeName (byte[] type_buf)
         {
-            int n = 0;
-            while (n < type_buf.Length)
-            {
-                if (0 == type_buf[n])
-                    break;
-                if (type_buf[n] < 0x20 || type_buf[n] > 0x7E)
-                    return "unknown";
-            }
-            if (0 == n)
-                return "";
-            return Encoding.ASCII.GetString (type_buf, 0, n).Trim();
+            if (!type_buf.IsAsciiVisible (0, true))
+                return "unknown";
+            return Binary.GetCString (type_buf, 0).Trim();
         }
 
         static readonly Regex s_InvalidChars = new Regex (@"[:/\\*?]");
