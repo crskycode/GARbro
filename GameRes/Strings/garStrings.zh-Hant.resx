@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -118,33 +118,33 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="BMPExtensionsDesc" xml:space="preserve">
-    <value>啟用各種擴展，如透明度支持</value>
+    <value>啟用各種擴充支援，例如透明度支援。</value>
   </data>
   <data name="BMPExtensionsText" xml:space="preserve">
-    <value>啟用 BMP 格式擴展</value>
+    <value>啟用 BMP 格式擴充支援</value>
   </data>
   <data name="JPEGQualityText" xml:space="preserve">
     <value>JPEG 壓縮品質</value>
   </data>
   <data name="MsgFileIsEmpty" xml:space="preserve">
-    <value>檔案為空。</value>
+    <value>檔案是空的</value>
   </data>
   <data name="MsgFileTooLarge" xml:space="preserve">
-    <value>檔案尺寸太大。</value>
+    <value>檔案過大</value>
   </data>
   <data name="MsgInvalidEncryption" xml:space="preserve">
-    <value>不正確的加密方式。</value>
+    <value>不正確的加密規則</value>
   </data>
   <data name="MsgInvalidFileName" xml:space="preserve">
-    <value>無效的檔案名。</value>
+    <value>無效的檔案名稱</value>
   </data>
   <data name="MsgInvalidFormat" xml:space="preserve">
-    <value>無效的檔案格式。</value>
+    <value>無效的檔案格式</value>
   </data>
   <data name="MsgUnknownEncryption" xml:space="preserve">
-    <value>未知的加密方式。</value>
+    <value>未知的加密規則</value>
   </data>
   <data name="MsgUnknownFormat" xml:space="preserve">
-    <value>無法作為壓縮包打開檔案。</value>
+    <value>此檔案無法作為封存檔開啟</value>
   </data>
 </root>
