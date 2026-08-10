@@ -133,7 +133,7 @@
     <value>複製</value>
   </data>
   <data name="CtxMenuCreate" xml:space="preserve">
-    <value>建立封存檔案...</value>
+    <value>建立封存檔……</value>
   </data>
   <data name="CtxMenuCut" xml:space="preserve">
     <value>剪下</value>
@@ -265,7 +265,7 @@
     <value>保持原樣</value>
   </data>
   <data name="TextChooseArchive" xml:space="preserve">
-    <value>選擇封存檔案位置</value>
+    <value>選擇封存檔位置</value>
   </data>
   <data name="TextChooseDestDir" xml:space="preserve">
     <value>選擇目標資料夾</value>
@@ -274,7 +274,7 @@
     <value>建立封存檔</value>
   </data>
   <data name="TextCreateArchiveError" xml:space="preserve">
-    <value>建立封存檔案失敗。</value>
+    <value>建立封存檔失敗！</value>
   </data>
   <data name="Type_directory" xml:space="preserve">
     <value>&lt;資料夾&gt;</value>
@@ -289,16 +289,16 @@
     <value>提取文字</value>
   </data>
   <data name="TextExtractTitle" xml:space="preserve">
-    <value>從封存檔案中提取</value>
+    <value>從封存檔中提取</value>
   </data>
   <data name="TextParametersTitle" xml:space="preserve">
-    <value>封存檔案參數</value>
+    <value>封存檔參數</value>
   </data>
   <data name="TextSaveAs" xml:space="preserve">
-    <value>另存為</value>
+    <value>另存新檔</value>
   </data>
   <data name="TextSaveImagesAs" xml:space="preserve">
-    <value>將圖像另存為</value>
+    <value>將圖像另存新檔</value>
   </data>
   <data name="TextTitle" xml:space="preserve">
     <value>遊戲資源瀏覽器（GARbro）</value>
@@ -319,7 +319,7 @@
     <value>確認覆蓋</value>
   </data>
   <data name="MsgCreatingArchive" xml:space="preserve">
-    <value>正在建立封存檔案{0}</value>
+    <value>正在建立封存檔{0}</value>
   </data>
   <data name="MenuOpen" xml:space="preserve">
     <value>開啟...</value>
