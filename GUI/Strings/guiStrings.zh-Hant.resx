@@ -322,7 +322,7 @@
     <value>正在建立封存檔{0}</value>
   </data>
   <data name="MenuOpen" xml:space="preserve">
-    <value>開啟...</value>
+    <value>開啟……</value>
   </data>
   <data name="MenuRecent" xml:space="preserve">
     <value>最近使用過的檔案</value>
@@ -376,7 +376,7 @@
     <value>檢視(_V)</value>
   </data>
   <data name="CtxMenuConvert" xml:space="preserve">
-    <value>轉換多媒體檔案...</value>
+    <value>轉換多媒體檔案……</value>
   </data>
   <data name="ButtonConvert" xml:space="preserve">
     <value>轉換</value>
