@@ -281,6 +281,7 @@
     <Compile Include="Psp\ArcQPK.cs" />
     <Compile Include="QoiCodec.cs" />
     <Compile Include="ScrPlayer\ImageIMG.cs" />
+    <Compile Include="Silky\ImageMMO.cs" />
     <Compile Include="SingleFileArchive.cs" />
     <Compile Include="Software House Parsley\ArcCG3.cs" />
     <Compile Include="Software House Parsley\ArcScn.cs" />
