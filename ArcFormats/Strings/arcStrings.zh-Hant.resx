@@ -405,4 +405,10 @@
     <value>請選擇 Tim2圖像 透明度格式。
 此資訊無法從檔案中正確讀取。</value>
   </data>
+  <data name="XP3LabelIndexTemplate" xml:space="preserve">
+    <value>索引範本</value>
+  </data>
+  <data name="XP3IndexTemplateTooltip" xml:space="preserve">
+    <value>原始加密 xp3，用於重建 Hxv4 索引。</value>
+  </data>
 </root>

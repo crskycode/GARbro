@@ -899,5 +899,25 @@ namespace GameRes.Formats.Strings {
                 return ResourceManager.GetString("ZIPEncryptedNotice", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Index template.
+        /// </summary>
+        public static string XP3LabelIndexTemplate {
+            get {
+                return ResourceManager.GetString("XP3LabelIndexTemplate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Original archive required as an index template
+        ///when repacking Hx-encrypted XP3 archives
+        ///(e.g. Dracu-Riot! [Steam]).
+        /// </summary>
+        public static string XP3IndexTemplateTooltip {
+            get {
+                return ResourceManager.GetString("XP3IndexTemplateTooltip", resourceCulture);
+            }
+        }
     }
 }

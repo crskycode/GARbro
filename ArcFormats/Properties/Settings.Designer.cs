@@ -120,6 +120,18 @@ namespace GameRes.Formats.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string XP3IndexTemplate {
+            get {
+                return ((string)(this["XP3IndexTemplate"]));
+            }
+            set {
+                this["XP3IndexTemplate"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("shift-jis")]
         public string SGFileNameEncoding {
             get {

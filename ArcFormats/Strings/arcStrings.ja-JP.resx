@@ -505,4 +505,13 @@ Choose encryption scheme or enter a passphrase.</comment>
     <value>Tim2画像のAlpha形式を選択してください。
 ファイルから正しく読み取ることができません。</value>
   </data>
+  <data name="XP3LabelIndexTemplate" xml:space="preserve">
+    <value>インデックスのテンプレート</value>
+    <comment>Index template</comment>
+  </data>
+  <data name="XP3IndexTemplateTooltip" xml:space="preserve">
+    <value>Hxv4インデックスを再構築するには、暗号化された元のxp3が必要です。</value>
+    <comment>Original archive required as an index template
+when repacking Hx-encrypted XP3 archives</comment>
+  </data>
 </root>

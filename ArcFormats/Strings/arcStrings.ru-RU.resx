@@ -356,4 +356,10 @@
   <data name="ZIPEncryptedNotice" xml:space="preserve">
     <value>Содержимое архива зашифровано.</value>
   </data>
+  <data name="XP3LabelIndexTemplate" xml:space="preserve">
+    <value>Шаблон индекса</value>
+  </data>
+  <data name="XP3IndexTemplateTooltip" xml:space="preserve">
+    <value>Для восстановления индекса Hxv4 требуется исходный зашифрованный xp3.</value>
+  </data>
 </root>
