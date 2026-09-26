@@ -66,6 +66,7 @@ namespace GameRes.Formats.KiriKiri
         public bool       CompressIndex { get; set; }
         public bool    CompressContents { get; set; }
         public bool          RetainDirs { get; set; }
+        public string      TemplatePath { get; set; }
     }
 
     [Serializable]
@@ -419,6 +420,7 @@ NextEntry:
                 CompressIndex       = Properties.Settings.Default.XP3CompressHeader,
                 CompressContents    = Properties.Settings.Default.XP3CompressContents,
                 RetainDirs          = Properties.Settings.Default.XP3RetainStructure,
+                TemplatePath        = Properties.Settings.Default.XP3IndexTemplate,
             };
         }
 
@@ -476,6 +478,19 @@ NextEntry:
 
             bool use_encryption = !(scheme is NoCrypt);
 
+            // Hx schemes do not implement the name hash algorithm, so the index of
+            // the original archive is required as a template in order to repack.
+            var hx_scheme = scheme as HxCrypt;
+            Dictionary<string, HxEntry> hx_entry_map = null;
+            Dictionary<string, string> hx_name_map = null;
+            byte[] hx_index_data = null;
+            ushort hx_index_flags = 0;
+            if (null != hx_scheme)
+            {
+                ReadHxTemplate (hx_scheme, xp3_options.TemplatePath,
+                                out hx_entry_map, out hx_name_map, out hx_index_data, out hx_index_flags);
+            }
+
             using (var writer = new BinaryWriter (output, Encoding.ASCII, true))
             {
                 writer.Write (s_xp3_header);
@@ -491,6 +506,7 @@ NextEntry:
 
                 int callback_count = 0;
                 var used_names = new HashSet<string>();
+                var used_hx_names = new HashSet<string>();
                 var dir = new List<Xp3Entry>();
                 long current_offset = writer.BaseStream.Position;
                 foreach (var entry in list)
@@ -509,12 +525,25 @@ NextEntry:
                         continue;
                     }
 
+                    bool encrypt_entry = use_encryption
+                                      && !(scheme.StartupTjsNotEncrypted && VFS.IsPathEqualsToFileName (name, "startup.tjs"));
+
+                    if (null != hx_entry_map)
+                    {
+                        var uname = MatchHxEntry (name, hx_name_map, hx_entry_map);
+                        if (!used_hx_names.Add (uname))
+                            throw new InvalidEncryptionScheme (string.Format (
+                                "Entry '{0}' maps onto already used index name '{1}'", name, uname));
+                        name = uname;
+                    }
+
                     var xp3entry = new Xp3Entry {
                         Name            = name,
                         Cipher          = scheme,
-                        IsEncrypted     = use_encryption
-                                       && !(scheme.StartupTjsNotEncrypted && VFS.IsPathEqualsToFileName (name, "startup.tjs"))
+                        IsEncrypted     = encrypt_entry
                     };
+                    if (null != hx_entry_map)
+                        xp3entry.Extra = hx_entry_map[name];
                     bool compress = compress_contents && ShouldCompressFile (entry);
                     using (var file = File.Open (name, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
@@ -525,6 +554,13 @@ NextEntry:
                     }
 
                     dir.Add (xp3entry);
+                }
+
+                long hx_index_offset = 0;
+                if (null != hx_index_data)
+                {
+                    hx_index_offset = writer.BaseStream.Position;
+                    writer.Write (hx_index_data);
                 }
 
                 long index_pos = writer.BaseStream.Position;
@@ -538,6 +574,15 @@ NextEntry:
                         callback (callback_count++, null, arcStrings.MsgWritingIndex);
 
                     long dir_pos = 0;
+                    if (null != hx_index_data)
+                    {
+                        header.Write ((uint)0x34767848); // "Hxv4"
+                        header.Write ((long)(8+4+2));
+                        header.Write (hx_index_offset);
+                        header.Write ((uint)hx_index_data.Length);
+                        header.Write (hx_index_flags);
+                        dir_pos = header.BaseStream.Position;
+                    }
                     if (3 == xp3_options.Version)
                     {
                         foreach (var entry in dir)
@@ -627,6 +672,129 @@ NextEntry:
                 }
             }
             output.Seek (0, SeekOrigin.End);
+        }
+
+        /// <summary>
+        /// Read entry information and the raw 'Hxv4' section off the original archive index.
+        /// </summary>
+        void ReadHxTemplate (HxCrypt scheme, string template_path,
+                             out Dictionary<string, HxEntry> entry_map, out Dictionary<string, string> name_map,
+                             out byte[] index_data, out ushort index_flags)
+        {
+            entry_map = null;
+            name_map = null;
+            index_data = null;
+            index_flags = 0;
+            if (string.IsNullOrEmpty (template_path))
+                throw new InvalidEncryptionScheme ("Hx encryption requires the original archive as an index template");
+            using (var template = new ArcView (template_path))
+            {
+                index_data = ReadHxv4Section (template, out index_flags);
+                entry_map = scheme.ReadIndex (Path.GetFileName (template_path), index_data);
+                if (null == entry_map)
+                    throw new InvalidEncryptionScheme ("Unable to decrypt Hx index within " + template_path);
+                // map real names (as reconstructed by TryOpen) back to the fake index names
+                name_map = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
+                foreach (var pair in entry_map)
+                {
+                    var info = pair.Value;
+                    if (string.IsNullOrEmpty (info.Path) && string.IsNullOrEmpty (info.Name))
+                        continue;
+                    var sb = new StringBuilder();
+                    if (!string.IsNullOrEmpty (info.Path))
+                    {
+                        sb.Append (info.Path);
+                        if (!info.Path.EndsWith ("/") && !info.Path.EndsWith ("\\"))
+                            sb.Append ('/');
+                    }
+                    sb.Append (!string.IsNullOrEmpty (info.Name) ? info.Name : pair.Key);
+                    name_map[sb.ToString()] = pair.Key;
+                }
+            }
+        }
+
+        static byte[] ReadHxv4Section (ArcView file, out ushort flags)
+        {
+            flags = 0;
+            long base_offset = 0;
+            if (0x5a4d == file.View.ReadUInt16 (0)) // 'MZ'
+                base_offset = SkipExeHeader (file, s_xp3_header);
+            if (!file.View.BytesEqual (base_offset, s_xp3_header))
+                throw new InvalidEncryptionScheme ("Invalid XP3 template " + file.Name);
+            long dir_offset = base_offset + file.View.ReadInt64 (base_offset+0x0b);
+            if (dir_offset < 0x13 || dir_offset >= file.MaxOffset)
+                throw new InvalidEncryptionScheme ("Invalid XP3 template " + file.Name);
+            if (0x80 == file.View.ReadUInt32 (dir_offset))
+            {
+                dir_offset = base_offset + file.View.ReadInt64 (dir_offset+9);
+                if (dir_offset < 0x13 || dir_offset >= file.MaxOffset)
+                    throw new InvalidEncryptionScheme ("Invalid XP3 template " + file.Name);
+            }
+            int header_type = file.View.ReadByte (dir_offset);
+            if (0 != header_type && 1 != header_type)
+                throw new InvalidEncryptionScheme ("Invalid XP3 template " + file.Name);
+
+            Stream header_stream;
+            if (0 == header_type) // read unpacked header
+            {
+                long header_size = file.View.ReadInt64 (dir_offset+1);
+                if (header_size > uint.MaxValue)
+                    throw new InvalidEncryptionScheme ("Invalid XP3 template " + file.Name);
+                header_stream = file.CreateStream (dir_offset+9, (uint)header_size);
+            }
+            else // read packed header
+            {
+                long packed_size = file.View.ReadInt64 (dir_offset+1);
+                if (packed_size > uint.MaxValue)
+                    throw new InvalidEncryptionScheme ("Invalid XP3 template " + file.Name);
+                using (var input = file.CreateStream (dir_offset+17, (uint)packed_size))
+                    header_stream = ZLibCompressor.DeCompress (input);
+            }
+
+            using (header_stream)
+            using (var header = new BinaryReader (header_stream, Encoding.Unicode))
+            {
+                while (-1 != header.PeekChar())
+                {
+                    uint entry_signature = header.ReadUInt32();
+                    long entry_size = header.ReadInt64();
+                    if (entry_size < 0)
+                        throw new InvalidEncryptionScheme ("Invalid XP3 template " + file.Name);
+                    long next_entry_pos = header.BaseStream.Position + entry_size;
+                    if (0x34767848 == entry_signature) // "Hxv4"
+                    {
+                        var offset = header.ReadInt64() + base_offset;
+                        var size = header.ReadUInt32();
+                        flags = header.ReadUInt16();
+                        if (offset < 0 || offset > file.MaxOffset || size > file.MaxOffset - offset)
+                            throw new InvalidEncryptionScheme ("Invalid Hxv4 section within " + file.Name);
+                        return file.View.ReadBytes (offset, size);
+                    }
+                    header.BaseStream.Position = next_entry_pos;
+                }
+            }
+            throw new InvalidEncryptionScheme ("Hxv4 section not found within " + file.Name);
+        }
+
+        static string MatchHxEntry (string name, Dictionary<string, string> name_map,
+                                    Dictionary<string, HxEntry> entry_map)
+        {
+            string uname;
+            if (name_map.TryGetValue (name, out uname))
+                return uname;
+            if (entry_map.ContainsKey (name))
+                return name;
+            int slash = name.IndexOf ('/');
+            if (-1 != slash)
+            {
+                var rest = name.Substring (slash+1);
+                if (name_map.TryGetValue (rest, out uname))
+                    return uname;
+                if (entry_map.ContainsKey (rest))
+                    return rest;
+            }
+            throw new InvalidEncryptionScheme (string.Format (
+                "Unable to match '{0}' within the original archive index", name));
         }
 
         void RawFileCopy (FileStream file, Xp3Entry xp3entry, Stream output, bool compress)

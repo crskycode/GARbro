@@ -403,4 +403,10 @@
     <value>Default audio sampling rate</value>
     <comment>translation pending</comment>
   </data>
+  <data name="XP3LabelIndexTemplate" xml:space="preserve">
+    <value>인덱스 템플릿</value>
+  </data>
+  <data name="XP3IndexTemplateTooltip" xml:space="preserve">
+    <value>Hxv4 인덱스를 재구성하려면 원본 암호화 xp3가 필요합니다.</value>
+  </data>
 </root>

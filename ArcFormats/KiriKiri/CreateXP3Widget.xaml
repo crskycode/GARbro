@@ -12,6 +12,7 @@
         <RowDefinition/>
         <RowDefinition/>
         <RowDefinition/>
+        <RowDefinition/>
     </Grid.RowDefinitions>
     <StackPanel Orientation="Horizontal" Grid.Row="0">
         <StackPanel Orientation="Vertical" Margin="0,0,10,5">
@@ -34,4 +35,11 @@
               IsChecked="{Binding Source={x:Static p:Settings.Default}, Path=XP3CompressContents, Mode=TwoWay}"/>
     <CheckBox Name="RetainStructure" Content="{x:Static s:arcStrings.XP3RetainStructure}" Grid.Row="3" Margin="0,0,0,0"
               IsChecked="{Binding Source={x:Static p:Settings.Default}, Path=XP3RetainStructure, Mode=TwoWay}"/>
+    <StackPanel Name="TemplateRow" Orientation="Horizontal" Grid.Row="4" Margin="0,5,0,0">
+        <Label Content="{x:Static s:arcStrings.XP3LabelIndexTemplate}" Target="{Binding ElementName=IndexTemplate}" Margin="0,0,5,0" Padding="4,0,0,0" VerticalAlignment="Center"/>
+        <TextBox Name="IndexTemplate" Width="240" Text="{Binding Source={x:Static p:Settings.Default}, Path=XP3IndexTemplate, Mode=TwoWay}"
+                 ToolTip="{x:Static s:arcStrings.XP3IndexTemplateTooltip}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+        <Button Content="..." Height="{Binding ElementName=IndexTemplate, Path=ActualHeight}" Width="{Binding Path=Height, RelativeSource={RelativeSource Self}, Mode=OneWay}"
+                Margin="7,0,0,0" Click="Browse_Click"/>
+    </StackPanel>
 </Grid>

@@ -405,4 +405,11 @@ Choose encryption scheme or enter a passphrase.</value>
     <value>Choose Tim2 image alpha format.
 It can't be read correctly from the file.</value>
   </data>
+  <data name="XP3LabelIndexTemplate" xml:space="preserve">
+    <value>Index template</value>
+  </data>
+  <data name="XP3IndexTemplateTooltip" xml:space="preserve">
+    <value>Original archive required as an index template
+when repacking Hx-encrypted XP3 archives</value>
+  </data>
 </root>

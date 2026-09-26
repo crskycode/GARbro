@@ -300,7 +300,11 @@ namespace GameRes.Formats.KiriKiri
 
         public override void Encrypt (Xp3Entry entry, long offset, byte[] values, int pos, int count)
         {
-            throw new NotImplementedException();
+            var info = entry.Extra as HxEntry;
+            if (null == info)
+                throw new InvalidEncryptionScheme ("Hx encryption requires entry information from the original archive index");
+            CreateFilter (entry);
+            info.Filter.Decrypt (offset, values, pos, count);
         }
 
         internal override CxProgram NewProgram (uint seed)
