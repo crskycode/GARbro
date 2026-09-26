@@ -516,7 +516,7 @@ NextEntry:
                                        && !(scheme.StartupTjsNotEncrypted && VFS.IsPathEqualsToFileName (name, "startup.tjs"))
                     };
                     bool compress = compress_contents && ShouldCompressFile (entry);
-                    using (var file = File.Open (name, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (var file = File.Open (entry.Name, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
                         if (!xp3entry.IsEncrypted || 0 == file.Length)
                             RawFileCopy (file, xp3entry, output, compress);
