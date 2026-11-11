@@ -81,9 +81,8 @@ namespace GameRes.Formats.Circus
                 return null;
             }
 
-           var dir = ReadIndexV2(file, count, file.View.ReadInt32(file.MaxOffset - 0x8));
-
-           return new ArcFile(file, this, dir);
+            var dir = ReadIndexV2(file, count, file.View.ReadInt32(file.MaxOffset - 0x8));
+            return null == dir ? null : new ArcFile(file, this, dir);
         }
 
         private List<Entry> ReadIndexV1 (ArcView file, int count, int name_length)
@@ -150,6 +149,8 @@ namespace GameRes.Formats.Circus
                 var entry = FormatCatalog.Instance.Create<Entry>(name);
                 entry.Size = entry_size;
                 entry.Offset = entry_offset;
+                if (!entry.CheckPlacement(file.MaxOffset))
+                    return null;
                 dir.Add(entry);
             }
 

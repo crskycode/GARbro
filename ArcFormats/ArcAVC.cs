@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
+using System.Linq;
 using GameRes.Utility;
 
 namespace GameRes.Formats.AVC
@@ -117,6 +118,16 @@ namespace GameRes.Formats.AVC
             {
                 if (m_input.Length != m_file.View.Read (0, m_input, 0, (uint)m_input.Length))
                     return null;
+                if (ReadIndex (0, 8, "METEOR01"))
+                {
+                    var dir = ParseIndex();
+                    long index_start = (long)m_header_offset + m_index_offset;
+                    if (null == dir || dir.Count == 0 || dir.Any (e => e.Offset < m_header_offset + m_header.Length
+                        || !e.CheckPlacement (index_start)))
+                        return null;
+                    RenameDuplicates (dir);
+                    return dir;
+                }
                 foreach (var scheme in KnownSchemes)
                 {
                     if (!ReadIndex (scheme.KeyOffset, scheme.HeaderOffset))
@@ -132,14 +143,14 @@ namespace GameRes.Formats.AVC
                 return null;
             }
 
-            bool ReadIndex (int key_offset, int header_offset)
+            bool ReadIndex (int key_offset, int header_offset, string password = null)
             {
                 // placing predefined string into XORed file is a very smart move
                 for (int i = 0; i < 8; ++i)
                 {
                     var symbol = m_input[header_offset+i] ^ "ARCHIVE\0"[i];
                     var check = (char)(m_input[key_offset+i] ^ symbol);
-                    if (!check.IsAsciiVisible())
+                    if (password != null ? check != password[i] : !check.IsAsciiVisible())
                         return false;
                     Key[i] = (byte)symbol;
                 }
@@ -150,13 +161,15 @@ namespace GameRes.Formats.AVC
                     return false;
                 m_index_offset = LittleEndian.ToInt32 (m_header, 0x10);
                 m_count = LittleEndian.ToInt32 (m_header, 0x20);
-                if (m_index_offset < 0x24 || (long)m_index_offset+header_offset >= m_file.MaxOffset
-                    || m_count <= 0 || m_count > 0xffff)
+                if (m_index_offset < 0x24 || m_count <= 0 || m_count > 0xffff)
                     return false;
+                long index_start = (long)m_index_offset + header_offset;
                 int index_size = entry_size * m_count;
+                if (index_size > m_file.MaxOffset - index_start)
+                    return false;
                 if (null == m_index || m_index.Length < index_size)
                     m_index = new byte[index_size];
-                if (index_size != m_file.View.Read (m_index_offset+header_offset, m_index, 0, (uint)index_size))
+                if (index_size != m_file.View.Read (index_start, m_index, 0, (uint)index_size))
                     return false;
                 m_header_offset = header_offset;
                 return true;
@@ -189,6 +202,26 @@ namespace GameRes.Formats.AVC
                     dir.Add (entry);
                 }
                 return dir;
+            }
+
+            static void RenameDuplicates (List<Entry> dir)
+            {
+                // Keep the first match under its original name, as the game does.
+                var names = new HashSet<string> (dir.Select (e => e.Name), StringComparer.OrdinalIgnoreCase);
+                foreach (var group in dir.GroupBy (e => e.Name, StringComparer.OrdinalIgnoreCase))
+                {
+                    int suffix = 2;
+                    foreach (var entry in group.Skip (1))
+                    {
+                        string extension = Path.GetExtension (entry.Name);
+                        string stem = entry.Name.Substring (0, entry.Name.Length - extension.Length);
+                        do
+                        {
+                            entry.Name = stem + "#" + suffix++ + extension;
+                        }
+                        while (!names.Add (entry.Name));
+                    }
+                }
             }
 
             internal static ArchiveScheme[] KnownSchemes = new ArchiveScheme[0];
